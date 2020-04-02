@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter4.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter6.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 5: Ignoring Files in Git</h1>
+
+<p>You’ve spent a fair bit of time learning how to get Git to track files in your repository, and how to deal with the ins and outs of Git’s near-constant surveillance of your activities. So it might come as a wonder that you’d ever want Git to actively <em>ignore</em> things in your repository.</p>
+
+<p>Why wouldn’t you want Git to track everything in your project? Well, there are quite a few situations in which you might not want Git to track <em>everything</em>.</p>
+
+<p>A good example would be any files that contain API keys, tokens, passwords or other secrets that you definitely need for testing, but you don’t want them sitting in a repository — especially a public repository — for all to see.</p>
+
+<p>Depending on your development platform, you may have lots of build artifacts or generated content sitting around inside your project directory, such as linker files, metadata, the resulting executable and other similar things. These files are regenerated each time you build your project, so you definitely don’t want Git to track these files. And then there are those persnickety things that some OSes add into your directories without asking, such as <strong>.DS_Store</strong> files on macOS.</p>
+
+<h2>Introducing .gitignore</h2>
+
+<p>Git’s answer to this is the <strong>.gitignore</strong> file, which is a set of rules held in a file that tell Git to not track files or sets of files. That seems like a very simple solution, and it is. But the real power of <strong>.gitignore</strong> is in its ability to pattern-match a wide range of files so that you don’t have to spell out every single file you want Git to ignore, and you can even instruct Git to ignore the same types of files across multiple projects. Taking that a step further, you can have a global <strong>.gitignore</strong> that applies to all of your repositories, and then put project-specific <strong>.gitignore</strong> files within directories or subdirectories under the projects that need a particularly pedantic level of control.</p>
+
+<p>In this chapter, you’ll learn how to configure your own <strong>.gitignore</strong>, how to use some prefabricated <strong>.gitignore</strong> files from places like GitHub, and how to set up a global <strong>.gitignore</strong> to apply to all of your projects.</p>
+
+<h2>Getting started</h2>
+
+<p>Imagine that you have a tool in your arsenal that “builds” your markdown into HTML in preparation for deploying your stunning book, tutorial and other ideas to a private website for your team to comment on.</p>
+
+<p>In this case, the HTML files would be the generated content that you <em>don’t</em> want to track in the repository. You&#39;d like to render them locally as part of your build process so you could preview them, but you&#39;d never edit the HTML directly: It’s always rendered using the tool.</p>
+
+<p>Create a new directory in the root folder of your project to hold these generated files, using the following command:</p>
+<pre><code class="bash">mkdir sitehtml
+</code></pre>
+<p>Now, create an empty HTML file in there (keep that imagination going, friend), with the following command:</p>
+<pre><code class="bash">touch sitehtml/all-todos.html
+</code></pre>
+<p>Run <code>git status</code> to see that Git recognizes the new content:</p>
+<pre><code class="bash">/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 7 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    sitehtml/
+
+nothing added to commit but untracked files present (use "git add" to track)
+</code></pre>
+<p>So Git, once again, sees what you’re doing. But here’s how to tell Git to turn a blind eye.</p>
+
+<p>Create a new file named <strong>.gitignore</strong> in the root folder of your project:</p>
+<pre><code class="bash">touch .gitignore
+</code></pre>
+<p>And add the following line to your newly created <strong>.gitignore</strong>:</p>
+<pre><code class="none">*.html
+</code></pre>
+<p>Save and exit. What you’ve done is to tell Git, &quot;For this project, ignore all files that match this pattern.&quot; In this case, you&#39;ve asked it to ignore all files that have an <strong>.html</strong> extension.</p>
+
+<p>Now, see what <code>git status</code> tells you:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 7 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    .gitignore
+
+nothing added to commit but untracked files present (use "git add" to track)
+</code></pre>
+<p>Git sees that you’ve added <strong>.gitignore</strong>, but it no longer views that HTML file as “untracked,” even through it’s buried down in a subdirectory.</p>
+
+<p>Now, what if you were fine with ignoring HTML files in subdirectories, but you wanted all HTML files in the top-level directory of your project to be tracked? You <em>could</em> theoretically re-create the same <strong>.gitignore</strong> files in each of your subdirectories and remove this top-level <strong>.gitignore</strong>, but that would be amazingly tedious and would not scale well.</p>
+
+<p>Instead, you can use some clever pattern-matching in your top-level <strong>.gitignore</strong> to only ignore subdirectories.</p>
+
+<p>Edit the single line in your <strong>.gitignore</strong> as follows:</p>
+<pre><code class="none">*/*.html
+</code></pre>
+<p>Save and exit. This new pattern tells Git, &quot;Ignore all HTML files that <em>aren’t</em> in the top-level directory.&quot;</p>
+
+<p>To see that this is true, create a new HTML file in the top-level directory of your project:</p>
+<pre><code class="bash">touch index.html
+</code></pre>
+<p>Run <code>git status</code> to see if Git does, in fact, recognize the HTML files in the top-level directory, while still ignoring the ones underneath:</p>
+<pre><code class="bash">/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 7 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    .gitignore
+    index.html
+
+nothing added to commit but untracked files present (use "git add" to track)
+</code></pre>
+<p>Git sees the top-level HTML file as untracked, but it’s still ignoring the other HTML file down in the <strong>sitehtml</strong> directory, just as you’d planned.</p>
+
+<h2>Nesting .gitignore files</h2>
+
+<p>You can easily nest <strong>.gitignore</strong> files in your project. Imagine that you have a subdirectory with HTML files that are referenced from your <strong>index.html</strong>. These aren’t generated by your imaginary build process but, rather, maintained by hand, and you want to make sure Git is able to track these.</p>
+
+<p>Create a new directory and name it <strong>htmlrefs</strong>:</p>
+<pre><code class="bash">mkdir htmlrefs
+</code></pre>
+<p>Now, create an HTML file in that subdirectory:</p>
+<pre><code class="bash">touch htmlrefs/utils.html
+</code></pre>
+<p>And create a <strong>.gitignore</strong> file in that directory as well:</p>
+<pre><code class="bash">touch htmlrefs/.gitignore
+</code></pre>
+<p>Open that file and add the following line to it:</p>
+<pre><code class="none">!/*.html
+</code></pre>
+<p>Save and exit. The exclamation mark (!) negates the pattern in this case, and the slash (/) means “start this rule from this directory.” So this rule says, “Despite any higher-level rules, don’t ignore any HTML files, starting in this directory or lower.”</p>
+
+<p>Execute <code>git status</code> to see if this is true:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 7 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    .gitignore
+    htmlrefs/
+    index.html
+
+nothing added to commit but untracked files present (use "git add" to track)
+</code></pre>
+<p>Git now sees the contents of your <strong>htmlrefs</strong> directory as untracked, just as you wanted.</p>
+
+<p>Now that you’re happy with the current arrangement of your <strong>.gitignore</strong> files, you can stage and commit those changes.</p>
+
+<p>Stage all changes with the following command:</p>
+<pre><code class="bash">git add .
+</code></pre>
+<p>And commit those changes as well:</p>
+<pre><code class="bash">git commit -m "Adding .gitignore files and HTML"
+</code></pre>
+<p>Setting up <strong>.gitignore</strong> files on a project-by-project basis will only get you so far, though. There are things — like the aforementioned <strong>.DS_Store</strong> files that macOS <em>so</em> helpfully adds to your directories — that you want to ignore all of the time. Git has the concept of a <strong>global .gitignore</strong> that you can use for cases like this.</p>
+
+<h2>Looking at the global .gitignore</h2>
+
+<p>Execute the following command to find out if you already have a global <strong>.gitignore</strong>:</p>
+<pre><code class="bash">git config --global core.excludesfile
+</code></pre>
+<p>If that command returns nothing, then you don’t have one set up just yet. No worries; it’s easy to create one.</p>
+
+<p>Create a file in a convenient location — in this case, your home directory — and name it something obvious:</p>
+<pre><code class="bash">touch ~/.gitignore_global
+</code></pre>
+<p>And now you can use the <code>git config</code> command to tell Git that it should look at this file from now on as your global <strong>.gitignore</strong>:</p>
+<pre><code class="bash">git config --global core.excludesfile ~/.gitignore_global
+</code></pre>
+<p>So now if I ask Git where my global <strong>.gitignore</strong> lives, it tells me the following:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git config --global core.excludesfile
+/Users/chrisbelanger/.gitignore_global
+</code></pre>
+<p>But now that you have a global <strong>.gitignore</strong>... what should you put in it?</p>
+
+<h2>Finding sample .gitignore files</h2>
+
+<p>This is one of those situations wherein you don’t have to reinvent the wheel. Hundreds of thousands of developers have come before you, and they’ve already figured out what the best configuration is for your particular situation.</p>
+
+<p>One of the better collections of prefabricated <strong>.gitignore</strong> files is hosted by GitHub — no surprise there, I’m sure. GitHub has files for most OSes, programming languages and code editors.</p>
+
+<p>Head over to <a href="https://github.com/github/gitignore">https://github.com/github/gitignore</a> and have a look through the packages it offers. Sample files that are appropriate for your OS can be found in the <strong>Global</strong> subfolder of the repository.</p>
+
+<p>Go into the <strong>Global</strong> subfolder (or simply navigate to <a href="https://github.com/github/gitignore/tree/master/Global">https://github.com/github/gitignore/tree/master/Global</a>) and find the one for your local system.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/16/ignoring-files/images/global-gitignore.png" style="width: 85%;"/></figure>
+
+<p>There’s a <strong>Windows.gitignore</strong>, a <strong>macOS.gitignore</strong>, a <strong>Linux.gitignore</strong> and many more, all waiting for you to add them to your own <strong>.gitignore</strong>. And that brings you to the challenge for this chapter!</p>
+
+<h2>Challenge: Populate your local .gitignore</h2>
+
+<p>This challenge should be rather straightforward and give you a good starting point for your global <strong>.gitignore</strong>. Your goal is to find the correct <strong>.gitiginore</strong> for your own OS, get that file from the GitHub repository, and add the contents of that file to your global <strong>.gitignore</strong>.</p>
+
+<ol>
+<li>Navigate to <a href="https://github.com/github/gitignore/tree/master/Global">https://github.com/github/gitignore/tree/master/Global</a>.</li>
+<li>Find the correct <strong>.gitignore</strong> for your own OS.</li>
+<li>Take the contents of that OS-specific <strong>.gitignore</strong>, and add it to your own global <strong>.gitignore</strong>.</li>
+</ol>
+
+<p>If you get stuck, or want to check your solution, you can always find the answer to this challenge under the challenges folder for this chapter.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li><strong>.gitignore</strong> lets you configure Git so that it ignores specific files or files that match a certain pattern.</li>
+<li><code>*.html</code> in your <strong>.gitignore</strong> matches on all files with an <strong>.html</strong> extension, in any directory or subdirectory of your project.</li>
+<li><code>*/*.html</code> matches all files with an <strong>.html</strong> extension, but only in subdirectories of your project.</li>
+<li><code>!</code> negates a matching rule.</li>
+<li>You can have multiple <strong>.gitignore</strong> files inside various directories of your project to override higher-level matches in your project.</li>
+<li>You can find where your global <strong>.gitignore</strong> lives with the command <code>git config --global core.excludesfile ~/.gitignore_global</code>.</li>
+<li>GitHub hosts some excellent started <strong>.gitignore</strong> files at <a href="https://github.com/github/gitignore">https://github.com/github/gitignore</a>.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>As you work on more and more complex projects, especially across multiple code-based and coding languages, you’ll find that the power of the global <strong>.gitignore</strong>, coupled with the project-specific (and even folder-specific) <strong>.gitignore</strong> files, will be an indispensable part of your Git workflow.</p>
+
+<p>The next chapter will take you through a short diversion into the various workings of <code>git log</code>. Yes, you’ve already used this command, but this command has some clever options that will help you view the history of your project in an efficient and highly readable manner. You’ll also learn about Git aliases, which will help you create some “shortcut” commands to make your life on the Git command line a whole lot easier!</p>
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter4.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter6.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>

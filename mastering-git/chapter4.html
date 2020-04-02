@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter3.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter5.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 4: The Staging Area</h1>
+
+<p>In previous chapters, you’ve gained some knowledge of the staging area of Git: You’ve learned how to stage modifications to your files, stage the addition of new files to the repository, view diffs beteween your working tree and the staging area, and you even got a little taste of how <code>git log</code> works.</p>
+
+<p>But there’s more to the staging area than just those few operations. At this point, you may be wondering why the staging area is necessary. “Why can’t you just push all of your current updates to the repository directly?”, you may ask. It’s a good question, but there are issues with that linear approach; Git was actually designed to solve some of the common issues with direct-commit history that exist under other version control systems.</p>
+
+<p>In this chapter, you’ll learn a bit more about how the staging area of Git works, why it’s necessary, how to undo changes you’ve made to the staging area, how to move and delete files in your repository, and more.</p>
+
+<h2>Why staging exists</h2>
+
+<p>Development is a messy process. What, in theory, should be a linear, cumulative construction of functionality in code, is more often than not a series of intertwining, non-linear threads of dead-end code, partly finished features, stubbed-out tests, collections of <code>// TODO:</code> comments in the code, and other things that are inherent to a human-driven and largely hand-crafted process.</p>
+
+<p>It’s noble to think that that you’ll work on just one feature or bug at a time; that your working tree will only ever be populated with clean, fully documented code; that you’ll never have unnecessary files cluttering up your working tree; that the configuration of your development environment will always be in perfect sync with the rest of your team; and that you won’t follow any rabbit trails (or create a few of your own) while you’re investigating a bug.</p>
+
+<p>Git was built to compensate for this messy, non-linear approach to development. It’s possible to work on <em>lots</em> of things at once, and selectively choose what you want to stage and commit to the repository. The general philosophy is that a commit should be a logical collection of changes <em>that make sense as a unit</em> — not just “the latest collection of things I updated that may or may not be related.”</p>
+
+<h3>A simple staging example</h3>
+
+<p>In the example below, I’m working on a website, and I want my design guru to review my CSS changes. I’ve changed the following files in the course of my work:</p>
+<pre><code class="none">index.html
+
+images/favicon.ico
+images/header.jpg
+images/footer.jpg
+images/profile.jpg
+
+styles/admin.css
+styles/frontend.css
+
+scripts/main.js
+scripts/admin.js
+scripts/email.js
+</code></pre>
+<p>I’ve updated a bunch of files, here, not just the CSS. And if I had to commit <em>everything</em> I had changed in my working directory, all at once, I’d have everything jammed into one commit:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/15/the-staging-area/images/messy-commit.png" style="width: 85%;"/></figure>
+
+<p>And if I committed each little change as I made it, my commit history might look like the following:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/15/the-staging-area/images/too-many-commits.png" style="width: 65%;"/></figure>
+
+<p>Then, when my design guru wants to take a look at the CSS changes, she’ll have to wade through my commit messages and potentially look through my diffs, or even ping me on Slack to figure out what files she’s supposed to review.</p>
+
+<p>But, instead, if I were to stage and commit the HTML change first, followed by the image changes, followed by the JavaScript changes, and then the CSS changes after that, the commit history, and even the mental picture of what I did, becomes a <em>lot</em> more clear:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/15/the-staging-area/images/clean-commits.png" style="width: 85%;"/></figure>
+
+<p>In later chapters of the book, you’ll come to understand the power of being able to consciously choose various changes to stage for commit, and even choose just a portion of a file to stage for commit. But, for now, you’ll explore a few more common scenarios, involving moving files, deleting files, and even undoing your changes that you weren’t <em>quite</em> ready to commit.</p>
+
+<h2>Undoing staged changes</h2>
+
+<p>It’s quite common that you’ll change your mind about a particular set of staged changes, or you might even use something like <code>git add .</code> and then realize that there was something in there you didn’t quite want to stage.</p>
+
+<p>You’ve got a file already for book ideas, but you also want to capture some ideas for non-technical management books. Not <em>everyone</em> wants to learn how to program, it seems.</p>
+
+<p>Head back to your terminal program, and create a new file in the <strong>books</strong> directory, named <strong>management<em>book</em>ideas.md</strong>:</p>
+<pre><code class="bash">touch books/management_book_ideas.md
+</code></pre>
+<p>But, wait — the video production team pings you and urgently requests that you update the video content ideas file, since they’ve just found someone to create the “Getting started with Symbian” course, and, oh, could you also add, “Advanced MOS 6510 Programming” to the list?</p>
+
+<p>OK, not a huge issue. Open up <strong>videos/content_ideas.md</strong>, mark the “Getting started with Symbian” entry as complete by putting an “x” between the brackets, and add a line to the end for the “Advanced MOS 6510 Programming” entry. When you’re done, your file should look like this:</p>
+<pre><code class="none"># Content Ideas
+
+Suggestions for new content to appear as videos:
+
+[x] Beginning Pascal
+[ ] Mastering Pascal
+[x] Getting started with Symbian
+[ ] Coding for the Psion V
+[ ] Flash for developers
+[ ] Advanced MOS 6510 Programming
+</code></pre>
+<p>Now, execute the following command to add those recent changes to your staging area:</p>
+<pre><code class="bash">git add .
+</code></pre>
+<p>Execute the following command to see what Git thinks about the current state of things:</p>
+<pre><code class="bash">git status
+</code></pre>
+<p>You should see the following:</p>
+<pre><code class="bash">On branch master
+Your branch is ahead of 'origin/master' by 3 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    new file:   books/management_book_ideas.md
+    modified:   videos/content_ideas.md
+
+
+</code></pre>
+<p>Oh, crud. You accidentally added that empty <strong>books/management<em>book</em>ideas.md</strong>. You likely didn’t want to commit that file just yet, did you? Well, now you’re in a pickle. Now that something is in the staging area, how do you get rid of it?</p>
+
+<p>Fortunately, since Git understands everything that’s changed so far, it can easily revert your changes for you. The easiest way to do this is through <code>git reset</code>.</p>
+
+<h3>git reset</h3>
+
+<p>Execute the following command to remove the change to <strong>books/management<em>book</em>ideas.md</strong> from the staging area:</p>
+<pre><code class="bash">git reset HEAD books/management_book_ideas.md
+</code></pre>
+<p><code>git reset</code> restores your environment to a particular state. But wait — what’s this <code>HEAD</code> business?</p>
+
+<p><code>HEAD</code> is simply a label that references the most recent commit. You may have already noticed the term <code>HEAD</code> in your console output while working through earlier portions of the book.</p>
+
+<p>In case you missed it, execute the following command to look at the log:</p>
+<pre><code class="bash">git log
+</code></pre>
+<p>If you look at the top lines of the output in your console, you’ll see something similar to the following:</p>
+<pre><code class="bash">commit 6c88142dc775c4289b764cb9cf2e644274072102 (HEAD -> master)
+Author: Chris Belanger <chris@razeware.com>
+Date:   Sat Jan 19 07:16:11 2019 -0400
+
+    Adding some tutorial ideas
+</code></pre>
+<p>That <code>(HEAD -&gt; master)</code> note tells you that the latest commit on your local system is as you expect — the commit where you added those tutorial ideas — and that this commit was done on the <code>master</code> branch. You’ll get into branches a little later in this section, but, for now, simply understand that <code>HEAD</code> keeps track of your latest commit.</p>
+
+<p>So, <code>git reset HEAD books/management_book_ideas.md</code>, in this context means “use <code>HEAD</code> as a reference point, restore the staging area to that point, but only restore any changes related to the <strong>books/management<em>book</em>ideas.md</strong> file.”</p>
+
+<p>To see that this is actually the case, execute <code>git status</code> once again:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 3 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    modified:   videos/content_ideas.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    books/management_book_ideas.md
+</code></pre>
+<p>That looks better: Git is no longer tracking <strong>books/management<em>book</em>ideas.md</strong>, but it’s still tracking your changes to <strong>videos/content_ideas.md</strong>. Phew — you’re back to where you wanted to be.</p>
+
+<p>Better commit that last change before you get into more trouble. Execute the following command to add another commit:</p>
+<pre><code class="bash">git commit -m "Updates book ideas for Symbian and MOS 6510"
+</code></pre>
+<p>Now, you’ve been thinking a bit, and you don’t think you should keep those ideas about the video platform itself in the <strong>videos</strong> folder. They more appropriately belong in a new folder: <strong>website</strong>.</p>
+
+<h2>Moving files in Git</h2>
+
+<p>Create the folder for the website ideas with the following command:</p>
+<pre><code class="bash">mkdir website
+</code></pre>
+<p>Now, you need to move that file from the <strong>videos</strong> directory to the <strong>website</strong> directory. Even with your short experience with Git, you probably suspect that it’s not quite as simple as just moving the file from one directory to the other. That’s correct, but it’s instructive to see <em>why</em> this is.</p>
+
+<p>So, you’ll move it the brute force way first, and see how Git interprets your actions. Execute the following command to use the standard <code>mv</code> command line tool to move the file from one directory to the other:</p>
+<pre><code class="bash">mv videos/platform_ideas.md website
+</code></pre>
+<p>Now, execute <code>git status</code> to see what Git thinks about what you’ve done:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 4 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+    deleted:    videos/platform_ideas.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    books/management_book_ideas.md
+    website/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+</code></pre>
+<p>Well, that’s a bit of a mess. Git thinks you’ve deleted a file that is being tracked, and it also thinks that you’ve added this <strong>website</strong> bit of nonsense. Git doesn’t seem so smart after all. Why doesn’t it just <em>see</em> that you’ve moved the file?</p>
+
+<p>The answer is in the way that Git thinks about files: as full paths, not individual directories. Take a look at how Git saw this part of the working tree before the move:</p>
+<pre><code class="none">videos/platform_ideas.md (tracked)
+videos/content_ideas.md (tracked)
+</code></pre>
+<p>And, after the move, here’s what it sees:</p>
+<pre><code class="none">videos/platform_ideas.md (deleted)
+videos/content_ideas.md (tracked)
+website/platform_ideas.md (untracked)
+</code></pre>
+<p>Remember, Git knows nothing about directories: It only knows about full paths. Comparing the two snippets of your working tree above shows you exactly why <code>git status</code> reports what it does.</p>
+
+<p>Seems like the brute force approach of <code>mv</code> isn’t what you want. Git has a built-in <code>mv</code> command to move things “properly” for you.</p>
+
+<p>Move the file back with the following command:</p>
+<pre><code class="bash">mv website/platform_ideas.md videos/
+</code></pre>
+<p>Now, execute the following:</p>
+<pre><code class="bash">git mv videos/platform_ideas.md website/
+</code></pre>
+<p>And execute <code>git status</code> to see what’s up:</p>
+<pre><code class="bash"> ~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 4 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    renamed:    videos/platform_ideas.md -> website/platform_ideas.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    books/management_book_ideas.md
+</code></pre>
+<p>That looks better. Git sees the file as “renamed,” which makes sense, since Git thinks about files in terms of their full path. And Git has also staged that change for you. Nice!</p>
+
+<p>Commit those changes now:</p>
+<pre><code class="bash">git commit -m "Moves platform ideas to website directory"
+</code></pre>
+<p>Your ideas project is now looking pretty ship-shape. But, to be honest, those live streaming ideas are pretty bad. Perhaps you should just get rid of them now before too many people see them.</p>
+
+<h2>Deleting files in Git</h2>
+
+<p>The impulse to just delete/move/rename files as you’d normally do on your filesystem is usually what puts Git into a tizzy, and it causes people to say they don’t “get” Git. But if you take the time to instruct Git on what to do, it usually takes care of things quite nicely for you.</p>
+
+<p>So — that live streaming ideas file has to go. The brute-force approach, as you may guess, isn’t the best way to solve things, but let’s see if it causes Git any grief.</p>
+
+<p>Execute the following command to delete the live streaming ideas file with the <code>rm</code> command:</p>
+<pre><code class="bash">rm articles/live_streaming_ideas.md
+</code></pre>
+<p>And then execute <code>git status</code> to see what Git’s reaction is:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 5 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+    deleted:    articles/live_streaming_ideas.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    books/management_book_ideas.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+</code></pre>
+<p>Oh, that’s not so bad. Git recognizes that you’ve deleted the file and is prompting you to stage it.</p>
+
+<p>Do that now with the following command:</p>
+<pre><code class="bash">git add articles/live_streaming_ideas.md
+</code></pre>
+<p>Then, see what’s up with <code>git status</code>:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 5 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    deleted:    articles/live_streaming_ideas.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    books/management_book_ideas.md
+</code></pre>
+<p>Well, that was a bit of a roundabout way to do things. But just like <code>git mv</code>, you can use the <code>git rm</code> command to do this in one fell swoop.</p>
+
+<h3>Restoring deleted files</h3>
+
+<p>First, you need to get back to where you were. Unstage the change to the live streaming ideas file with your best new friend, <code>git reset</code>:</p>
+<pre><code class="bash">git reset HEAD articles/live_streaming_ideas.md
+</code></pre>
+<p>That removes that change from the staging area — but it doesn’t <em>restore</em> the file itself in your working tree. To do that, you’ll need to tell Git to retrieve the latest committed version of that file from the repository.</p>
+
+<p>Execute the following to restore your file to its original infamy:</p>
+<pre><code class="bash">git checkout HEAD articles/live_streaming_ideas.md
+</code></pre>
+<p>You’re back to where you started.</p>
+
+<p>Now, get rid of that file with the following command:</p>
+<pre><code class="bash">git rm articles/live_streaming_ideas.md
+</code></pre>
+<p>And, finally, commit that change with an appropriate message:</p>
+<pre><code class="bash">git commit -m "Removes terrible live streaming ideas"
+</code></pre>
+<p>Looks like you’ll have to leave the live streaming to the experts: fourteen-year-olds on YouTube with too much time on their hands and too little common sense.</p>
+
+<p>That empty file for management book ideas is still hanging around. Since you don’t have any good ideas for that file yet, you may as well commit it and hope that someone down the road can populate it with good ways to be an effective manager.</p>
+
+<p>Add that empty file with the following command:</p>
+<pre><code class="bash">git add books/management_book_ideas.md
+</code></pre>
+<p>And commit it with a nice comment:
+<code>bash
+git commit -m &quot;Adds all the good ideas about management&quot;
+</code></p>
+
+<p>It’s not all bad: Abandoning your attempts to building a career in live streaming <em>and</em> management gives you more time to take on this next challenge!</p>
+
+<h2>Challenge: Move, delete and restore a file</h2>
+
+<p>This challenge takes you through the paces of what you just learned. You’ll need to do the following:</p>
+
+<ol>
+<li>Move the newly added <strong>books/management<em>book</em>ideas.md</strong> to the <strong>website</strong> directory with the <code>git mv</code> command.</li>
+<li>You’ve changed your mind and don’t want <strong>management<em>book</em>ideas.md</strong> anymore, so remove that file completely with the <code>git rm</code> command. Git will give you an error when you do this, but look at the suggested actions in the error closely to see how to solve this problem this with the <code>-f</code> option, and try again.</li>
+<li>But now you’re having second thoughts: Maybe you <em>do</em> have some good ideas about management. Restore that file to its original location.</li>
+</ol>
+
+<p>Remember to use the <code>git status</code> command to get your bearings when you need to. Liberal use of <code>git status</code> will definitely help you understand what Git is doing at each stage of this challenge.</p>
+
+<p>If you get stuck, or want to check your solution, you can always find the answer to this challenge under the <strong>challenges</strong> folder for this chapter.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li>The <strong>staging area</strong> lets you contruct your next commit in a logical, structure fashion.</li>
+<li><code>git reset HEAD &lt;filename&gt;</code> lets you restore your staging environment to the last commit state.</li>
+<li>Moving files around and deleting them from the filesystem, without notifying Git, will cause you grief.</li>
+<li><code>git mv</code> moves files around and stages the change, all in one action.</li>
+<li><code>git rm</code> removes files from your repository and stages the change, again, in one action.</li>
+<li>Restore deleted and staged files with <code>git reset HEAD &lt;filename&gt;</code> followed by <code>git checkout HEAD &lt;filename&gt;</code></li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>That was quite a ride! You’ve gotten deeper into understanding how Git sees the world; building up a parallel mental model will help you out immensely as you use Git more in your daily workflow.</p>
+
+<p>Sometimes, you may have files that you explicitly <em>don’t</em> want to add to your repository, but that you want to keep around in your working tree. You can tell Git to ignore things in your working tree, and even tell Git to ignore particular files across <em>all</em> of your projects through the magic of the simple file known as <strong>.gitignore</strong> — which you’ll learn all about in the next chapter!</p>
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter3.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter5.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>

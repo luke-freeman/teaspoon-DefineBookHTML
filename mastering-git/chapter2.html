@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter1.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter3.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 2: Cloning a Repo</h1>
+
+<p>The preceding chapter took you through a basic crash course in git and got you right into using the basic mechanisms of git: cloning a repo, creating branches, switching to branches, committing your changes, pushing those changes back to the remote and opening a pull request on GitHub for your changes to be reviewed.</p>
+
+<p>That explains the <em>how</em> aspect of git, but, if you’ve worked with git for any length of time (or haven’t worked with git for any time at all), you’ll know that the <em>how</em> is not enough. It’s important to also understand the <em>why</em> of git to gain not just a better understanding of what’s going on under the hood, but also to understand how to fix things when, not if, your repository gets into a weird state.</p>
+
+<p>So, first, you&#39;ll start with the most basic aspect of git: getting a repository copied to your local system via <strong>cloning</strong>.</p>
+
+<h2>What is cloning?</h2>
+
+<p>Cloning is exactly what it sounds like: creating a copy, or clone, of a repository. A git repository is nothing terribly special; it’s simply a directory, containing code, text or other assets, that tracks its own history. Then there’s a bit of secure file transfer magic in front of that directory that lets you sync up changes. That’s it.</p>
+
+<p>A git repository tracks the history of all changes inside the repository through a hidden <strong>.git</strong> directory that you usually don’t ever have to bother with — it’s just there to quietly track everything that happens inside the repository. You’ll learn more about the structure and function of the hidden .git directory later on in this book.</p>
+
+<p>So since a git repository is just a special directory, you could, in theory, effect a pretty cheap and dirty clone operation by zipping up all the files in a repository on your friend’s or colleague’s workstation and then emailing it to yourself. When you extract the contents of that zipped-up file, you’d have an exact copy of the repository on your computer.</p>
+
+<p>However, emailing things around can (and does) get messy. Instead, many organizations make use of online repository hosts, such as GitHub, GitLab, BitBucket or others. Some organizations choose to self-host repositories, and you’ll learn about that later in this book. But, for now, you’ll stick to using online hosts — in this example, GitHub.</p>
+
+<h2>Using GitHub</h2>
+
+<p>GitHub, at its most basic level, is really just a big cloud-based storage solution for repositories, with account and access management mixed in with some collaboration tools. But you don’t need to know about all the features of GitHub to start working with repositories hosted on GitHub, as demonstrated in the git crash course in the previous chapter.</p>
+
+<p>Cloning from an online repository is a rather straightforward operation. To get started, you simply need the following things:</p>
+
+<ul>
+<li>A working installation of git on your local system.</li>
+<li>The remote URL of the repository you want to clone.</li>
+<li>Any credentials for the online host.</li>
+</ul>
+
+<blockquote>
+<p><strong>Note</strong>: It <em>is</em> generally possible to clone repositories without using credentials, but you won’t be able to propogate the changes you make on your local copy back to the online host.</p>
+</blockquote>
+
+<h3>The GitHub repository homepage</h3>
+
+<p>There’s a repository already set up on GitHub for you to clone, so you first need to get the remote URL of the repsitory.</p>
+
+<p>To start, navigate to <a href="https://github.com/raywenderlich/ideas">https://github.com/raywenderlich/ideas</a> and log in with your GitHub username and password. If you haven’t already set up an account, you can do so now.</p>
+
+<figure>
+  <img src="https://librarium.rwdev.io/git/master/13/cloning-a-repo/images/github-repo-main-page.png" class="l-img-85" style="width: 85%;"/>
+  <figcaption>Fig.1 - Trulli, Puglia, Italy.</figcaption>
+</figure>
+
+<p>Once you’re on the homepage for the repository, have a look at the list of files and directories listed on the page. These lists and directories represent the contents of the repository, and they are the files that you’ll clone to your local system. </p>
+
+<p>But where do you find the remote URL of the repository to clone it? Like many things in git (and with computers, in general), there are multiple ways to clone a repository. In this chapter, you’ll use the easiest and most common cloning method, which starts on the GitHub repository homepage.</p>
+
+<h3>Finding the repository clone URL</h3>
+
+<p>Look for and click on the <strong>Clone or download</strong> button on the repository homepage. </p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/13/cloning-a-repo/images/clone-or-download-button.png" style="width: 30%;"/></figure>
+
+<p>The little pop-up dialog gives you a few options to get a repository cloned to your local system:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/13/cloning-a-repo/images/clone-dialog.png" style="width: 50%;"/></figure>
+
+<ol>
+<li>This is the main HTTPS URL for the repository. This is the URL that you’ll use in this chapter to clone from the command line git client.</li>
+<li>You can also use SSH to clone a repository. Clicking this link lets you toggle between using SSH and HTTPS to work with the repository. Leave this at (the rather unintuitive) <strong>Use SSH</strong> for now. You’ll cover SSH later in this book.</li>
+<li>If you have the GitHub Desktop app installed, you can use the <strong>Open in Desktop</strong> button to launch GitHub Desktop and clone this repository all in one step.</li>
+<li>If you just want a zipped copy of what’s in the repository (but not all the repository bits itself), the <strong>Download ZIP</strong> button will let you do this.</li>
+</ol>
+
+<p>For now, copy the HTTPS URL that you see in the dialog via the little clipboard icon button to the right of the URL. This places a copy of the HTTPS URL in your clipboard so that you can paste it into your command line later.</p>
+
+<h3>Cloning on the command line</h3>
+
+<p>Now, go to your command prompt. Change to a suitable directory where you want your repositories to live. In this case, I’ll create a directory in my home directory named <strong>MasteringGit</strong> where I would like to locally store all of the repos for this book.</p>
+
+<p>Execute the following command to create the new directory:</p>
+<pre><code class="bash">mkdir MasteringGit
+</code></pre>
+<p>Now, execute the following command to see the listing of files in the directory (yours will be different than shown below):</p>
+<pre><code class="bash">ls
+</code></pre>
+<p>I see the following directories on my system, and there’s my new <strong>MasteringGit</strong> directory:</p>
+<pre><code class="bash">~ $ ls
+Applications        Downloads       Music
+Dropbox             Pictures        Library
+Public              Desktop         MasteringGit
+Documents           Movies
+
+</code></pre>
+<p>Execute the following command to navigate into the new directory:</p>
+<pre><code class="bash">cd MasteringGit
+</code></pre>
+<p>You’re now ready to use the command line to clone the repository.</p>
+
+<p>Enter the following command, but don’t press the <strong>Enter</strong> key or <strong>Return</strong> key just yet:</p>
+<pre><code class="bash">git clone
+</code></pre>
+<p>Now, press the <strong>Space bar</strong> to add one space character and paste in the URL you copied earlier, so your command looks as follows:</p>
+<pre><code class="bash">git clone https://github.com/raywenderlich/ideas.git
+</code></pre>
+<p>Now, you can press <strong>Enter</strong> to execute the command.</p>
+
+<p>You’ll see a brief summary of what Git is doing below:</p>
+<pre><code class="bash">~/MasteringGit $ git clone https://github.com/raywenderlich/ideas.git
+Cloning into 'ideas'...
+remote: Enumerating objects: 49, done.
+remote: Total 49 (delta 0), reused 0 (delta 0), pack-reused 49
+Unpacking objects: 100% (49/49), done.
+
+</code></pre>
+<p>Execute the <code>ls</code> command to see the new contents of your <strong>MasteringGit</strong> directory:</p>
+<pre><code class="bash">~/MasteringGit $ ls
+ideas
+</code></pre>
+<p>Use the <code>cd</code> command, followed by the <code>ls</code> command, to navigate into the new directory and see what’s inside:</p>
+<pre><code class="bash">~/MasteringGit $ cd ideas
+~/MasteringGit/ideas $ ls
+LICENSE     README.md   articles    books       videos
+</code></pre>
+<p>So there’s the content from the repository. Well, the <em>visible</em> content at least. Run the <code>ls</code> command again with the <code>-a</code> option to show the hidden .git directory discussed earlier:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ ls -a
+.       .git        README.md   books
+..      LICENSE     articles    videos
+</code></pre>
+<p>Aha — there’s that magical <strong>.git</strong> hidden directory. Take a look at what’s inside.</p>
+
+<h3>Exploring the .git directory</h3>
+
+<p>Use the <code>cd</code> command to navigate into the .git directory:</p>
+<pre><code class="bash">cd .git
+</code></pre>
+<p>Execute the <code>ls</code> command again to see what dark magic lives inside this directory. This time, use the <code>-F</code> option so that you can tell which entities are files and which are directories:</p>
+<pre><code class="bash">ls -F
+</code></pre>
+<p>You’ll see the following:</p>
+<pre><code class="bash">~/MasteringGit/ideas/.git $ ls -F
+HEAD        config      hooks/      info/       objects/    refs/
+branches/   description index       logs/       packed-refs
+</code></pre>
+<p>So it’s not quite the dark arts, I’ll admit. But what <em>is</em> here is a collection of important files and directories that track and control all aspects of your local git repository. Most of this probably won’t make much sense to you at this point, and that’s fine. As you progress through this book, you’ll learn what most of these bits and pieces do.</p>
+
+<p>For now though, leave everything as-is; there’s seldom any reason to work at this level of the repository. Pretty much everything you do should happen up in your working directory, not in the .git subfolder.</p>
+
+<p>So backtrack up one level to the the working directory for your repository with the <code>cd</code> command:</p>
+<pre><code class="bash">cd ..
+</code></pre>
+<p>You’re now back up in the relative safety of the top level of your repository. For now, it’s enough to know where that .git directory lives and that you really don’t have a reason to deal with anything in there right now.</p>
+
+<h2>Forking</h2>
+
+<p>You’ve managed to make a clone of the <strong>ideas</strong> repository, but although <strong>ideas</strong> is a public repository, the <strong>ideas</strong> repository currently belongs to the raywenderlich organization. And since you’re not a member of the raywenderlich organization, the access control settings of the <strong>ideas</strong> repository mean that you won’t be able to push any local changes you make back to the server. Bummer.</p>
+
+<p>But with most public repositories, like <strong>ideas</strong>, you can create a remote copy of the repository up on the server under your own personal user space. You, or anyone you grant access to, can then clone that copy locally, make changes and push those changes back to the remote copy on the server. Creating a remote clone — or a <strong>fork</strong> — of a repository is known as <strong>forking</strong>.</p>
+
+<p>First, you’ll need to rid your machine of the existing local clone of the <strong>ideas</strong> repository. It’s of little use to you in its current state, so it’s fine to get rid of it.</p>
+
+<p>First, head up one level, out of your working directory, by executing the following command:</p>
+<pre><code class="bash">cd ..
+</code></pre>
+<p>You should be back up at the main <strong>MasteringGit</strong> directory:</p>
+<pre><code class="bash">~/MasteringGit $
+
+</code></pre>
+<p>Now, get rid of the local clone with the <code>rm</code> command, and use the <code>-rf</code> options to recursively delete all subdirectories and files, and to force all files to be deleted:</p>
+<pre><code class="bash">rm -rf ideas
+</code></pre>
+<p>Execute <code>ls</code> to be sure the directory is gone:</p>
+<pre><code class="bash">~/MasteringGit $ ls
+~/MasteringGit $
+
+</code></pre>
+<p>Looks good. You’re ready to create a fork of the raywenderlich <strong>ideas</strong> repository... which leads you to your challenge for this chapter!</p>
+
+<h3>Challenge: Fork on GitHub and create a local clone</h3>
+
+<p>The goal of this challenge is twofold:</p>
+
+<ol>
+<li>Create a fork of the <strong>ideas</strong> repository under your own user account on GitHub.</li>
+<li>Clone the forked repository to your local system.</li>
+</ol>
+
+<p>Navigate to the homepage for the <strong>ideas</strong> repository at <a href="https://github.com/raywenderlich/ideas">https://github.com/raywenderlich/ideas</a>. In the top right-hand corner of the page, you’ll see the <strong>Fork</strong> button. That’s your starting point.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/13/cloning-a-repo/images/fork-button.png"  style="width: 30%;"/> </figure>
+
+<p>The steps to this challenge are:</p>
+
+<ol>
+<li>Fork the <strong>ideas</strong> repository under your own personal user account.</li>
+<li>Find the clone URL of your new, forked repository.</li>
+<li>Clone the forked <strong>ideas</strong> repository to your local system.</li>
+<li>Verify that the local clone created successfully.</li>
+<li>Bonus: Prove that you’ve cloned the fork of your repo and not the original repository.</li>
+</ol>
+
+<p>If you get stuck, you can always find the solution to this challenge under the <strong>challenges</strong> folder. </p>
+
+<h2>Key points</h2>
+
+<ul>
+<li><strong>Cloning</strong> creates a local copy of a remote git repository.</li>
+<li>Use <code>git clone</code> along with the clone URL of a remote repository to create a local copy of a repository.</li>
+<li>Cloning a repository automatically creates a hidden <strong>.git</strong> directory, which tracks the activity on your local repository.</li>
+<li><strong>Forking</strong> creates a remote copy of a repository under your personal user space.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>Once you’ve successfully completed the challenge for this chapter, head into the next chapter where you’ll learn about the <code>status</code>, <code>diff</code>, <code>add</code> and <code>commit</code> commands. You’ll also learn just a bit about how git actually tracks the changes that you make in the local copy of your repository.</p>
+
+</main>
+
+<footer>
+  <nav>
+     <div class='left-align'><a href="chapter1.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter3.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>

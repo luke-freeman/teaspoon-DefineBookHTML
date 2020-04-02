@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter8.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter10.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 9: Creating a Repository</h1>
+
+<p>You’ve come a long way in your Git journey, all the way from your first commit, to learning about what Git does behind the scenes, to managing some rather complicated merge scenarios. But in all your work with repositories, you haven’t yet learned exactly <em>where</em> a repository comes from. Sure, you’ve cloned a repository, and you’ve forked repositories and worked with remotes, but how do you create a repository and a remote <em>from scratch</em>?</p>
+
+<p>This chapter shows you how to create a brand-new repository on your local machine, and how to create a remote to host your brand-new repository for all to see.</p>
+
+<h2>Getting started</h2>
+
+<p>Many people will blindly tell you that the easiest way to create a repository is to “Go to GitHub, click ‘New Repository’, and then clone it locally.” But, in most cases, you’ll have a small project built up on disk before you ever think about turning it into a full-fledged repository. So this chapter will put you right into the middle of your project development and walk you through turning a simple project directory into a full-fledged repository.</p>
+
+<p>But. first, you’ll need a project! Check the <strong>starter</strong> folder for this chapter; inside, you’ll find a small starter project that is the starting webpage for the sales page for this book.</p>
+
+<p>Copy the entire <strong>mastering-git-web</strong> directory from the <strong>starter</strong> folder into your main <strong>MasteringGit</strong> folder.</p>
+
+<p>Now, open up your terminal program and navigate into the <strong>mastering-git-web</strong> directory. If you’ve been following along with the book so far, you’re likely still in the <strong>MasteringGit/ideas</strong> folder, so execute the following command to get into the <strong>mastering-git-web</strong> subdirectory:</p>
+<pre><code class="bash">cd ../mastering-git-web/
+</code></pre>
+<p>Once there, execute the following command to tell Git to set this directory up as a new repository:</p>
+<pre><code class="bash">git init
+</code></pre>
+<p>Git tells you that it has set up an empty repository:</p>
+<pre><code class="bash">Initialized empty Git repository in /Users/chrisbelanger/MasteringGit/mastering-git-web/.git/
+</code></pre>
+<p>Why does Git tell you it’s an empty repository, when there are files in that directory? Think back to how you staged files to add to a repository: You have to use the <code>git add</code> command to tell Git what to include in the repository; Git wouldn’t just assume it should pick up any old file lying around. And the same is true, here; Git has created an empty repository, just waiting for you to add some files.</p>
+
+<p>Now, before you add any files, you’ll want to get two things in your repository that are good hygiene for any repository that’s designed to be shared online: a <strong>LICENSE</strong> file, and a <strong>README</strong> file.</p>
+
+<h2>Creating a LICENSE file</h2>
+
+<p>It’s worth understanding why you need a license file, before you go and create one blindly.</p>
+
+<p>Having a license file in your repository makes it clear how others may, or may not, use your code. In this modern, digital age, some people believe that copying/stealing/borrowing/reusing anything is fair game, but most people will want to respect your license terms, even though you may be providing the code freely online.</p>
+
+<p>Having a license outlines how others may contribute to your project and what their rights are. The interesting bit comes in when you <em>don’t</em> include a license to your work. If you create a project and stick it up on GitHub, without a license, you’re stating that <em>no one</em> has the license to use your code in <em>any</em> situation — they can look at it, but that’s about it.</p>
+
+<p>That’s all well and good if “look but don’t touch” is truly what you want, but if you’re inviting others to collaborate with you, then having no license means that once someone else touches the code <em>it’s not clear who owns the copyright anymore</em>. Having a license file included with your code makes it clear where the ownership of this code lies.</p>
+
+<p>True, having a license included with your project won’t protect you from code burglars who just want to take your work and use it without your permission. But what it <em>does</em> do is indicate the terms of use and reuse of your project to anyone who wants to collaborate in a fair manner, or use your work in any other manner. It’s a live-and-let-live kind of thing.</p>
+
+<p>Now, with that said, what kind of license should you choose? That’s not always an easy question to answer. Most of the time, your projects will have just code in them, but what if they contain images? What if they contain hardware designs? 3D printing files? Your open-source book manuscript? Fonts you designed and want to open-source? What if your project is a mix of these or more?</p>
+
+<p>There’s a great site out there that will help you navigate the ins and outs of your project, and help you choose a license for your new project. Navigate to <a href="https://choosealicense.com/">https://choosealicense.com/</a>, and you’ll see a lot of options:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/20/creating-a-repo/images/choosealicense.png" style="width: 70%;"/>
+</figure>
+
+<p>You can explore the site at your leisure, but, in this case, I am happy for others to learn from and reuse my work in any way they like as I build up my webpage. So select the <strong>MIT License</strong> link, and you’ll be taken to the main license page for the MIT License, which is one of the most common and most permissive licenses.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/20/creating-a-repo/images/copytoclipboard.png" style="width: 70%;"/>
+</figure>
+
+<p>Click the <strong>Copy license text to clipboard</strong> button to copy the text of the MIT license to your clipboard.</p>
+
+<p>Now, return to your terminal program, create a new file named <strong>LICENSE</strong> (yes, uppercase, and no extension required) in the root folder, and populate it with the contents of the clipboard. Save your work when you’re done.</p>
+
+<p>In my case, I used <code>nano</code> to create the file:</p>
+<pre><code class="bash">nano LICENSE
+</code></pre>
+<p>Then, I pasted in the text I copied from <a href="https://choosealicense.com/">https://choosealicense.com/</a>, updated <code>[YEAR]</code> with the current year, updated <code>[fullname]</code> with the name of my organization, and saved my changes.</p>
+
+<p>That takes care of the license file. Now, it’s time to turn your attention to the README file.</p>
+
+<h2>Creating a README file</h2>
+
+<p>The README is much more straightforward than the license file. Inside the README, you can put whatever details you want people to know about you, your project, and anything that will help them get started using your project.</p>
+
+<p>The common convention is to craft README files in Markdown, primarily so that they can be rendered in an easy-to-read format on the front page of your repository on GitHub, GitLab or other cloud hosts.</p>
+
+<p>Create a new file in the root directory of your project named <strong>README.md</strong>, and populate it with the following information (changing whatever you like to suit):</p>
+<pre><code class="none"># mastering-git-web
+
+This is the main website for the Mastering Git book, from raywenderlich.com.
+
+contact: @crispytwit
+</code></pre>
+<p>Save your changes and exit out of the editor.</p>
+
+<p>You’ve got your current project, LICENSE file, and the README file — looks like you’re ready to commit your files to the repository.</p>
+
+<p>To see what’s outstanding for your first commit, execute <code>git status</code> to see what Git’s view of your working area looks like:</p>
+<pre><code class="bash">~MasteringGit/mastering-git-web $ git status
+On branch master
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    LICENSE
+    README.md
+    css/
+    images/
+    index.html
+
+nothing added to commit but untracked files present (use "git add" to track)
+</code></pre>
+<p>That looks as you’d expect: The basic files for the project are there, along with the new LICENSE and README.md file.</p>
+
+<p>By this point, you should be able to stage and commit this collection of files to your new repository. Try to stage and commit the complete set of files on your own first, before following the instructions below. Remember: If you mess things up, you can simply use <code>git reset</code> to revert your changes.</p>
+
+<p>Stage the files for commit with the following command:</p>
+<pre><code class="bash">git add .
+</code></pre>
+<p>This adds everything in the current directory and subdirectories.</p>
+
+<p>Now, commit your changes to the repository, providing a sensible commit message:</p>
+<pre><code class="bash">git commit -m "Initial commit of the web site, README and LICENSE"
+</code></pre>
+<p>Since this is your very first commit into the repository, Git shows you a bit of different output:</p>
+<pre><code class="bash">[master (root-commit) 443f9b3] Initial commit of the web site, README and LICENSE
+ 5 files changed, 111 insertions(+)
+ create mode 100644 LICENSE
+ create mode 100644 README.md
+ create mode 100644 css/style.css
+ create mode 100644 images/SFR_b+w_-_penguin.jpg
+ create mode 100644 index.html
+</code></pre>
+<p>The very first commit to the repository is a bit special, since it doesn’t have <em>any</em> parents. Recall earlier when you learned that every commit in Git has at least one parent? Well, this is a special case in which Git creates a root commit for the repository, upon which all future commits will be based.</p>
+
+<p>And that’s it! You’ve made your first commit to your repository. But you’re not done — you want to get this repository pushed up to a remote for the world to <em>ooh</em> and <em>ahh</em> over. You’ll do that in the second half of this chapter.</p>
+
+<h3>Create mode</h3>
+
+<p>That <code>create mode</code> is something you’ve seen before in the output from <code>git commit</code>, and have probably wondered about. It’s of academic interest only at this point; it really doesn’t affect you much at this stage of your interaction with repositories.</p>
+
+<p>But in the interest of being obsessively thorough, here’s what that number with <code>commit mode</code> means:</p>
+
+<ul>
+<li>The number after <code>create mode</code> is an octal (base 8) representation of the type of file you’re creating, along with the read/write/execute permissions of that file.</li>
+<li>The first part of that binary number is a 4-bit value that indicates the <em>kind</em> of file you’re creating. In this case, you’re creating a regular file, which Git labels with <code>1000</code> in binary. There are other types, inlcluding symlinks and gitlinks, which you aren’t using yet in your Git career.</li>
+<li>The next part of that binary number is three unused bits: <code>000</code>.</li>
+<li>The last part of that binary number is made of nine bits, and represents the UNIX-style permissions of this file. The first three bits hold the owner’s read/write/execute permission bits, the next three bits hold the group’s read/write/execute bits, and the final three bits hold the global read/write/execute bits.</li>
+<li>So since you own the file, Git sets the first three bits to <code>110</code> (read, write, but no execution since this isn’t an executable binary or script file).</li>
+<li>To allow anyone in your group to read but not write to this file, Git assigns <code>100</code> (read, no write, no execute).</li>
+<li>To allow anyone in the world to read but not write to this file, Git assigns <code>100</code> (read, no write, no execute).</li>
+<li>When all of that binary is concatenated together, you have <code>1000</code> with <code>000</code> with <code>110100100</code> = <code>1000000110100100</code> as the full binary string.</li>
+<li>Convert <code>1000000110100100</code> to octal (base 8), and you have <code>100644</code> as a compact way to indicate the type and permissions of this file.</li>
+</ul>
+
+<p>See? I <em>told</em> you it was of academic interest only.</p>
+
+<h2>Creating and syncing a remote</h2>
+
+<p>At the moment, you have your own repository on your local system. But that’s a bit like practicing your guitar in your room your whole life and never jamming out at a party so you can wow your guests with a performance of “Wonderwall.” You need to get this project out where others can see and potentially collaborate on it.</p>
+
+<p>Head over to GitHub to create a new remote repository for your project, and log in to your account.</p>
+
+<p>Click the <strong>+</strong> sign at the top right-hand corner of the screen, and select <strong>New repository</strong>.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/20/creating-a-repo/images/create-new-1.png" style="width: 50%;"/></figure>
+
+<p>A few details to follow, here:</p>
+
+<ul>
+<li>Give your repository a good name; in this case, I’m going to use the same name as my project’s directory name, <code>mastering-git-web</code>, although this isn’t strictly necessary.</li>
+<li>Leave the repository set to <strong>Public</strong>, so that anyone can see it.</li>
+<li>Finally, leave the <strong>Initialize this repository with a README</strong> unchecked, since your local repository already exists and already has a README.</li>
+<li>Leave <strong>Add .gitignore</strong> and <strong>Add a license</strong> to their default <strong>None</strong> settings, since you don’t need those either, and they can be added or changed later on.</li>
+<li>Click the <strong>Create repository</strong> button and Git will shortly bring you to the <strong>Quick setup</strong> page.</li>
+</ul>
+
+<figure><img src="https://librarium.rwdev.io/git/master/20/creating-a-repo/images/create-new-2.png" style="width: 80%;"/></figure>
+
+<p>This gives you several instructions on how to get some content into your repository. In your case, you already have an existing repository, so you can use the instructions under <strong>...or push an existing repository from the command line</strong>. Because you’re all about that command line Git mastery, right?</p>
+
+<p>Ensure the <strong>HTTPS</strong> option is selected in the top section of this page, next to the repository’s URL. Copy the URL provided to your clipboard.</p>
+
+<p>Return to your terminal program, and execute the following to add a new remote to your local repository, substituting in the copied URL of your own repository where necessary:</p>
+<pre><code class="bash">git remote add origin https://github.com/belangerc/mastering-git-web.git
+</code></pre>
+<p>Git gives you no output from that command, but you can verify that you’ve added a remote, using the following command:</p>
+<pre><code class="bash">git remote -v
+</code></pre>
+<p>You should see your remote shown in the output:</p>
+<pre><code class="bash">origin  https://github.com/belangerc/mastering-git-web.git (fetch)
+origin  https://github.com/belangerc/mastering-git-web.git (push)
+</code></pre>
+<p>Now, you simply need to push the commits on your local repository to your remote. Do that with the following command:</p>
+<pre><code class="bash">git push --set-upstream origin master
+</code></pre>
+<p>This pushes your changes, as you’d expect. The <code>--set-upstream</code> ensures that every branch in your local repository tracks against the corresponding branch in the remote repository. Otherwise, Git won’t automatically “know” to track your local branches against the remote ones.</p>
+
+<p>The <code>origin</code> option is simply the name of the remote to which you want to push; remember, <code>origin</code> is simply the conventional default name of the remote Git uses when it sets up your repository with <code>git init</code>, and not a standard.</p>
+
+<p><code>master</code> is the name of the local branch you want to push to your remote. Again, Git assumes the default name of <code>master</code> for the first branch of your repository.</p>
+
+<blockquote>
+<p><strong>Note</strong>: You can also use the shorter <code>git push -u origin master</code> to accomplish the same thing. <code>-u</code> and <code>--set-upstream</code> are aliases.</p>
+</blockquote>
+
+<p>You can verify that Git has pushed and started tracking your local branch against the remote branch by looking at the final lines in the ouptut from your <code>git push</code> command:</p>
+<pre><code class="bash"> * [new branch]      master -> master
+Branch 'master' set up to track remote branch 'master' from 'origin'.
+</code></pre>
+<p>Head back to the homepage for your GitHub repo, and refesh the page to see your new repo there in all its glory:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/20/creating-a-repo/images/create-new-3.png" style="width: 80%;"/></figure>
+
+<p>At this point, your repository is ready for you, or anyone else, to view, clone, and contribute to.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li>Use <code>git init</code> to set up a Git repository.</li>
+<li>It’s accepted practice to have a <strong>LICENSE</strong> file and a <strong>README.md</strong> file in your repository.</li>
+<li>Use <code>git add</code> followed by <code>git commit</code> to create the first commit on your new repository.</li>
+<li><code>create mode</code> is simply Git telling you what file permissions it’s setting on the files added to the repository.</li>
+<li>You can create an empty remote on GitHub to host your repository, and you can choose to not have GitHub populate your remote with a LICENSE and README.md by default.</li>
+<li>Use <code>git remote add origin &lt;remote-url&gt;</code> to add a remote to your local repository.</li>
+<li>Use <code>git remote -v</code> to see the remotes associated with your local repository.</li>
+<li>Use <code>git push --set-upstream origin master</code> or <code>git push -u origin master</code> to push the local commits in your repository to your remote, and to start tracking your local branch against the remote branch.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>You’ve come full circle with your introduction to Git! You started out with cloning someone else’s repo, made a significant amount of changes to it, learned how to stage and commit your changes, how to view the log, how to branch, how to merge, how to pull and push changes, and now you’re back where you started, except that <em>you</em> are the creator of your very own repository. That feels good, doesn’t it?</p>
+
+<p>If you’re an inquisitive sort, though, you probably have a lot of unanswered questions about Git, especially how it works under the hood, what merge conflicts are, how to deal with partially complete workfiles, and how to do things that you’ve heard about online, such as squashing commits, cherry-picking commits, rewriting history, and using rebasing as an alternative to merging.</p>
+
+<p>The next section of this book takes you further under the hood of Git, shows you a little more about the internals of Git, and walks you through some scenarios that scare a lot of developers off of using Git in an advanced way. But you’ll soon see that the elegance and relative simplicity of Git let you do some <em>amazing</em> things that can greatly improve the life of you and your distributed development team.</p>
+
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter8.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter10.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>

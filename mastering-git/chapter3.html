@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter2.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter4.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 3: Committing Your Changes</h1>
+
+<p>The previous chapter showed you how to clone remote repositories down to your local system. At this point, you’re ready to start making changes to your repository. That’s great!</p>
+
+<p>But, clearly, just making the changes to your local files isn’t all you need to do. You’ll need to stage the changes to your files, so that Git knows about the changes. Once you’re done making your changes, you&#39;ll need to tell Git that you want to commit those changes into the repository.</p>
+
+<h2>What is a commit?</h2>
+
+<p>As you’ve probably guessed by now, a Git repo is more than a collection of files; there’s quite a bit going on beneath the surface to track the various states of your changes and, even more importantly, what to do with those changes.</p>
+
+<p>To start, head back to the homepage for your forked repository at <a href="https://github.com/%3Cyour-username%3E/ideas">https://github.com/[your-username]/ideas</a>, and find the little “11 commits” link at the top of the repository page:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/14/committing-your-changes/images/n-commits.png" style="width: 25%;"/></figure>
+
+<p>Click that link, and you’ll see a bit of the history of this repository:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/14/committing-your-changes/images/repo-history.png" style="width: 85%;"/></figure>
+
+<p>Each of those entries is a <strong>commit</strong>, which is essentially a snapshot of the particular state of the set of files in the repository at a point in time.</p>
+
+<p>Generally, a commit represents some logical update to your collection of files. Imagine that you’re adding new items to your ideas lists, and you’ve added as many as you can think of. You’d like to capture that bit of work as a commit into your repository.</p>
+
+<p>The state of the repository before you began those updates — your starting point, in effect — is the <strong>parent</strong> commit. After you commit your changes — which is the <strong>diff</strong> — that next commit would be the <strong>child</strong> commit. The diagram below explains this a little more:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/14/committing-your-changes/images/commit-example-1.png" style="width: 85%;"/></figure>
+
+<p>In this example, you can see that the parent commit is X, and the child commit is Y. The diff between them are the changes I made to a single file:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/14/committing-your-changes/images/diff-in-file.png" style="width: 50%;"/></figure>
+
+<p>And a diff doesn’t just have to be additions to files; creating new content, modifying content and deleting content are other common changes that you’ll make to the files in your repository.</p>
+
+<p>In Git, there are a few steps between the act of changing a file and creating a commit. This may seem like a bit of a heavy approach, at first, but, as you move through building up your commits, you’ll see how each step helps create a workflow that keeps you in tune with the files in your repository and what’s happened to them.</p>
+
+<p>The easiest way to understand the process of building up commits is to actually create one. You’ll create a change to a file, see how Git acknowledges that change, how to stage that change, and, finally, how to commit that change to the repository.</p>
+
+<h3>Starting with a change</h3>
+
+<p>Open your terminal program and navigate to the <strong>ideas</strong> repository inside of the <strong>MasteringGit</strong> directory. This should be the clone of the forked repository that you created in the previous chapter.</p>
+
+<blockquote>
+<p><strong>Note</strong>: If you missed completing the challenge at the end of the Chapter 2, go back now and follow the challenge solution so that you have a local clone of the forked <strong>ideas</strong> repository to work with.</p>
+</blockquote>
+
+<p>Assume that you want to add more ideas to the books file. Open <strong>books/book_ideas.md</strong> in any plaintext editor. I like to use <code>nano</code> since it’s quick and easy, and I don’t need to remember any obscure commands to use it.</p>
+
+<p>Add a line to the end of the file to capture a new book idea: “Care and feeding of developers.” Take care to follow the same format as the other entries. Your file should look like this:</p>
+<pre><code class="none"># Ideas for new book projects
+
+- [ ] Hotubbing by tutorials
+- [x] Advanced debugging and reverse engineering
+- [ ] Animal husbandry by tutorials
+- [ ] Beginning tree surgery
+- [ ] CVS by tutorials
+- [ ] Fortran for fun and profit
+- [x] RxSwift by tutorials
+- [ ] Mastering Git
+- [ ] Care and feeding of developers
+</code></pre>
+<p>When you’re done, save your work and return to your terminal program.</p>
+
+<p>In the background, Git is watching what you’re doing. Don’t believe me? Execute the following command to see that Git knows what you’ve done, here:</p>
+<pre><code class="bash">git status
+</code></pre>
+<p><code>git status</code> shows you the current state of your working tree — that is, the collection of files in your directory that you’re working on. In your case, the working tree is everything inside your <strong>ideas</strong> directory.</p>
+
+<p>You should see the following output:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+    modified:   books/book_ideas.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+</code></pre>
+<p>Ah, there’s the file you just changed: <strong>books/book_ideas.md</strong>. Git knows that you’ve modified it... but what does it mean when Git says, <code>Changes not staged for commit</code>?</p>
+
+<p>It’s time for a short diversion to look at the various states of your files in Git. Building up a mental model of the various states of Git will go a long way to understanding what Git is doing... especially when Git does something that you don’t quite understand.</p>
+
+<h2>Working trees and staging areas</h2>
+
+<p>The <strong>working copy</strong> or <strong>working tree</strong> or <strong>working directory</strong> (language is great, there’s always more than one name for something) is the collection of project files on your disk that you work with and modify directly, just as you did in <strong>books/book_ideas.md</strong> above. Git thinks about the files in your working tree as being in three distinct states:</p>
+
+<ul>
+<li>Unmodified</li>
+<li>Modified</li>
+<li>Staged</li>
+</ul>
+
+<p><strong>Unmodified</strong> simply means that you haven’t changed this file since your last commit. <strong>Modified</strong> is simply the opposite of that: Git sees that you’ve modified this file in some fashion since your last commit. But what’s this “staged” state?</p>
+
+<p>If you’re coming from the background of other version control systems, such as Subversion, you may think of a “commit” as simply saving the current state of all your modifications to the repository. But Git is different, and a bit more elegant. Instead, Git lets you build your next commit incrementally as you work, by using the concept of a <strong>staging area</strong>.</p>
+
+<blockquote>
+<p><strong>Note</strong>: If you’ve ever moved houses, you’ll understand this paradigm. When you are packing for the move, you don’t take all of your belongings and throw them loosely into the back of the moving van. (Well, maybe you do, but you <em>shouldn’t</em>, really.)</p>
+
+<p>Instead, you take a cardboard box (the staging area), and fill it with similar things, fiddle around to get everything packed properly in the box, take out a few things that don’t quite belong, and add a few more things you forgot about.</p>
+
+<p>When you’re satisfied that the box is <em>just</em> right, you close up the box with packing tape and put the box in the back of the van. You’ve used the box as your staging area in this case, and taping up the box and placing on the van is like making a commit.</p>
+</blockquote>
+
+<p>Essentially, as you work on bits and pieces of your project, you can mark a change, or set of changes, as “staged,” which is how you tell Git, “Hey, I want these changes to go into my next commit... but I might have some more changes for you, so just hold on to these changes for a bit.” You can add and remove changes from this staging area as you go about your work, and only commit that set of carefully curated changes to the repository when you’re good and ready.</p>
+
+<p>Notice above that I said, &quot;Add and remove <em>changes</em> from the staging area,” not “Add and remove <em>files</em> from the staging area.” There’s a distinct difference, here, and you’ll see this difference in just a bit as you stage your first few changes.</p>
+
+<h3>Staging your changes</h3>
+
+<p>Git’s pretty useful in that it (usually) tells you what do to in the output to a command. Look back at the output from <code>git status</code> above, and the <code>Changes not staged for commit</code> section gives you a few suggestions on what to do:</p>
+<pre><code class="bash">Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+</code></pre>
+<p>So since you want to get this change eventually committed to the repository, you’ll try the first suggestion: <code>git add</code>.</p>
+
+<p>Execute the following command:</p>
+<pre><code class="bash">git add books/book_ideas.md
+</code></pre>
+<p>Then, execute <code>git status</code> to see the results of what you’ve done:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    modified:   books/book_ideas.md
+
+</code></pre>
+<p>Ah, that seems a little better. Git recognizes that you’ve now placed this change in the staging area.</p>
+
+<p>But you have another modification to make to this file that you forgot about: Since you’re reading this book, you should probably check off that entry for “Mastering Git” in there to mark it as complete.</p>
+
+<p>Open <strong>books/book_ideas.md</strong> in your text editor and place a lower-case <strong>x</strong> in the box to mark that item as complete:</p>
+<pre><code class="none">- [x] Mastering Git
+</code></pre>
+<p>Save your changes and exit out of your editor. Now, execute <code>git status</code> again (yes, you’ll use that command often to get your bearings), and see what Git tells you:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    modified:   books/book_ideas.md
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+    modified:   books/book_ideas.md
+</code></pre>
+<p>What gives? Git now tells you that <strong>books/book_ideas.md</strong> is <em>both</em> staged and not staged? How can that be?</p>
+
+<p>Remember that you’re staging <em>changes</em> here, not <em>files</em>. Git understands this, and tells you that you have one change already staged for commit (the <code>Care and feeding of developers</code> change), and that you have one change that’s not yet been staged — marking <code>Mastering Git</code> as complete.</p>
+
+<p>To see this in detail, you can tell Git to show you what it sees as changed. Remember that <strong>diff</strong> we talked about earlier? Yep, that’s your next new command.</p>
+
+<p>Execute the following command:</p>
+<pre><code class="bash">git diff
+</code></pre>
+<p>You’ll see something similar to the following:</p>
+<pre><code class="bash">diff --git a/books/book_ideas.md b/books/book_ideas.md
+index 76dfa82..5086b1f 100644
+--- a/books/book_ideas.md
++++ b/books/book_ideas.md
+@@ -7,5 +7,5 @@
+ - [ ] CVS by tutorials
+ - [ ] Fortran for fun and profit
+ - [x] RxSwift by tutorials
+-- [ ] Mastering Git
++- [x] Mastering Git
+ - [ ] Care and feeding of developers
+</code></pre>
+<p>That looks pretty obtuse, but a diff is simply a compact way of showing you what’s changed between two files. In this case, Git is telling you that you’re comparing two versions of the same file — the version of the file in your working directory, and the version of the file that you told Git to stage earlier with the <code>git add</code> command:</p>
+<pre><code class="bash">--- a/books/book_ideas.md
++++ b/books/book_ideas.md
+</code></pre>
+<p>And it also shows you what’s changed between those two versions:</p>
+<pre><code class="bash">-- [ ] Mastering Git
++- [x] Mastering Git
+</code></pre>
+<p>The <code>-</code> prefix means that a line (or a portion of that line) has been deleted, and the <code>+</code> prefix means that a line (or a portion of that line) has been added. In this case, you deleted the space and added an <strong>x</strong> character.</p>
+
+<p>You’ll learn more about <code>git diff</code> as you go along, but that’s enough to get you going for now. Time to stage your latest change.</p>
+
+<p>It gets a bit tedious to always type the full name of the file you want to stage with <code>git add</code>. And, let’s be honest, most of the time you really just want to stage <em>all</em> of the changes you’ve made. Git’s got your back with a great shortcut.</p>
+
+<p>Execute the following:</p>
+<pre><code class="bash">git add .
+</code></pre>
+<p>That full stop (or period) character tells Git to add all changes to the staging area, both in this directory and all other subdirectories. It’s pretty handy, and you’ll use it a lot in your workflow.</p>
+
+<p>Again, execute <code>git status</code> to see what’s ready in your staging area:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    modified:   books/book_ideas.md
+</code></pre>
+<p>That looks good. There’s nothing left unstaged, and you’ll just see the changes to <strong>books/book_ideas.md</strong> that are ready to commit.</p>
+
+<p>As an interesting point, execute <code>git diff</code> again to see what’s changed:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git diff
+~/MasteringGit/ideas $
+</code></pre>
+<p>Uh, that’s interesting. <code>git diff</code> reports that nothing has changed. But if you think about it for a moment, that makes sense. <code>git diff</code> compares your working tree to the staging area. With <code>git add .</code>, you put everything from your working tree into the staging area, so there <em>should</em> be no differences between your working tree and staging.</p>
+
+<p>If you want to be <em>really</em> thorough (or if you don’t trust Git quite yet), you can ask Git to show you the differences that it’s staged for commit with an extra option on the end of <code>git diff</code>.</p>
+
+<p>Execute the following command, making note that it’s two <code>--</code> characters, not one:</p>
+<pre><code class="bash">git diff --staged
+</code></pre>
+<p>You’ll see a diff similar to the following:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git diff --staged
+diff --git a/books/book_ideas.md b/books/book_ideas.md
+index 1a92ca4..5086b1f 100644
+--- a/books/book_ideas.md
++++ b/books/book_ideas.md
+@@ -7,4 +7,5 @@
+ - [ ] CVS by tutorials
+ - [ ] Fortran for fun and profit
+ - [x] RxSwift by tutorials
+-- [ ] Mastering Git
++- [x] Mastering Git
++- [ ] Care and feeding of developers
+</code></pre>
+<p>Here’s the lines that have changed:</p>
+<pre><code class="none">-- [ ] Mastering Git
++- [x] Mastering Git
++- [ ] Care and feeding of developers
+</code></pre>
+<p>You’ve removed something from the <code>Mastering Git</code> line, added something to the <code>Mastering Git</code> line, and added the <code>Care and feeding of developers</code> line. That seems to be everything. Looks like it’s time to actually commit your changes to the repository.</p>
+
+<h2>Committing your changes</h2>
+
+<p>You’ve made all of your changes, and you’re ready to commit to the repository. Simply execute the following command to make your first commit:</p>
+<pre><code class="bash">git commit
+</code></pre>
+<p>Git will take you into a rather confusing state. Here’s what I see in my terminal program:</p>
+<pre><code class="bash">
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch master
+# Your branch is up to date with 'origin/master'.
+#
+# Changes to be committed:
+#       modified:   books/book_ideas.md
+#
+~
+~
+~
+~
+"~/MasteringGit/ideas/.git/COMMIT_EDITMSG" 10L, 272C
+</code></pre>
+<p>If you haven’t been introduced to <code>vim</code> before, welcome! <strong>Vim</strong> is the default text editor used by Git when it requires free text input from you.</p>
+
+<p>If you read the first little bit of instruction that Git provides there, it becomes apparent what Git is asking for:</p>
+<pre><code class="none"># Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+</code></pre>
+<p>Ah — Git needs a message for your commit. If you think back to the list of commits you saw earlier in the chapter, you’ll notice that each entry had a little message with it:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/14/committing-your-changes/images/little-message.png" style="width: 30%;"/></figure>
+
+<p>Working in Vim isn’t terribly intuitive, but it’s not hard once you know the commands.</p>
+
+<p>Press the <strong>I</strong> key on your keyboard to enter <strong>Insert</strong> mode, and you’ll see the status line at the bottom of the screen change to <code>-- INSERT--</code> to indicate this. You’re free to type what you like here, but stay simple and keep your message to just one line to start.</p>
+
+<p>Type the following for your commit message:</p>
+<pre><code class="none">Added new book entry and marked Git book complete
+</code></pre>
+<p>When you’re done, you need to tell Vim to save the file and exit. Exit out of Insert mode by pressing the <strong>Escape</strong> key first.</p>
+
+<p>Now, type a colon (<strong>Shift</strong> + <strong>;</strong> on my American keyboard) to enter Ex mode, which lets you execute commands.</p>
+
+<p>To save your work and exit in one fell swoop, type <code>wq</code> — which means “write” and “quit” in that order, and press <strong>Enter</strong>:</p>
+<pre><code class="none">:wq
+</code></pre>
+<p>You’ll be brought back to the command line and shown the result of your commit:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git commit
+[master 57f31b3] Added new book entry and marked Git book complete
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+</code></pre>
+<p>That’s it! There’s your first commit. One file changed, with two insertions and one deletion. That matches up with what you saw in <code>git diff</code> earlier in the chapter.</p>
+
+<p>Now that you’ve learned how to commit changes to your files, you’ll take a look at adding new files and directories to repositories.</p>
+
+<h2>Adding directories</h2>
+
+<p>You have directories in your project to hold ideas for books, videos and articles. But it would be good to have a directory to also store ideas for written tutorials. So you’ll create a directory and an idea file, and add those to your repository.</p>
+
+<p>Back in your terminal program, execute the following command to create a new directory named <strong>tutorials</strong>:</p>
+<pre><code class="bash">mkdir tutorials
+</code></pre>
+<p>Then, confirm that the directory exists, using the <code>ls</code> command:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ ls
+LICENSE     articles    tutorials
+README.md   books       videos
+</code></pre>
+<p>So the directory is there; now you can see how Git recognizes the new directory. Execute the following command:</p>
+<pre><code class="bash">git status
+</code></pre>
+<p>You’ll see the following:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+
+</code></pre>
+<p>Er, that doesn’t seem right. Why can’t Git see your new directory? That’s by design, and it reflects the way that Git thinks about files and directories.</p>
+
+<h3>How Git views your working tree</h3>
+
+<p>At its core, Git really only knows about <em>files</em>, and nothing about <em>directories</em>. Git thinks about files as string that point to entities Git can track. If you think about this, it makes some sense: If a file can be uniquely referenced as the full path to the file, then tracking directories separately is quite redundant.</p>
+
+<p>For instance, here’s a list of all the files (excluding hidden files and directories) currently in your project:</p>
+<pre><code class="none">ideas/LICENSE
+ideas/README.md
+ideas/articles/clickbait_ideas.md
+ideas/articles/live_streaming_ideas.md
+ideas/articles/ios_article_ideas.md
+ideas/books/book_ideas.md
+ideas/videos/content_ideas.md
+ideas/videos/platform_ideas.md
+</code></pre>
+<p>This is a simplified version of how Git views your project: a list of paths to files that are tracked in the repository. From this, Git can easily and quickly re-create a directory and file structure when it clones a repository to your local system.</p>
+
+<p>You’ll learn more about the inner workings of Git in the intermediate section of this book, but, for now, you simply need to figure out how to get Git to pick up a new directory that you want to add to the repository.</p>
+
+<h3>.keep files</h3>
+
+<p>The solution to making Git recognize a directory is clearly to put a file inside of it. But what if you don’t have anything yet to put here, or you want an empty directory to show up in eveyone’s clone of this project?</p>
+
+<p>The solution is to use a placeholder file. The usual convention is to create a hidden, zero-byte <strong>.keep</strong> file inside the directory you want Git to “see.”</p>
+
+<p>To do this, first navigate into the <code>tutorials</code> directory that you just created with the following command:</p>
+<pre><code class="bash">cd tutorials
+</code></pre>
+<p>Then create an empty file named <strong>.keep</strong>, using the <code>touch</code> command for expediency:</p>
+<pre><code class="bash">touch .keep
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: The <code>touch</code> command was originally designed to set and modify the “modified” and “accessed” times of existing files. But one of the nice features of <code>touch</code> is that, if a specified file doesn’t exist, <code>touch</code> will automatically create the file for you.</p>
+
+<p><code>touch</code> is a nice alternative to opening a text editor to create and save an empty file. Experienced command line users take advantage of this shortcut much of the time.</p>
+</blockquote>
+
+<p>Execute the following command to view the contents of this directory, including hidden dotfiles:</p>
+<pre><code class="bash">ls -a
+</code></pre>
+<p>You should see the following:</p>
+<pre><code class="bash">~/MasteringGit/ideas/tutorials $ ls -a
+.   ..  .keep
+</code></pre>
+<p>There’s your hidden file. Let’s see what Git thinks about this directory now. Excute the following command to move back to the main project directory:</p>
+<pre><code class="bash">cd ..
+</code></pre>
+<p>Now, execute <code>git status</code> to see Git’s understanding of the situation:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+    tutorials/
+
+nothing added to commit but untracked files present (use "git add" to track)
+</code></pre>
+<p>Git now understands that there’s something in that directory, but that it’s <strong>untracked</strong>, which means you haven’t yet added whatever’s in that directory to the repository. Adding the contents of that directory is easy to do with the <code>git add</code> command.</p>
+
+<p>Execute the following command, which is a slightly different form of <code>git add</code>:</p>
+<pre><code class="bash">git add tutorials/*
+</code></pre>
+<p>While you <em>could</em> have just used <code>git add .</code> as before to add all files, this form of <code>git add</code> is a nice way to <em>only</em> add the files in a particular directory or subdirectory. In this case, you’re telling Git to stage all files underneath the <strong>tutorials</strong> directory.</p>
+
+<p>Git now tells you that it’s tracking this file, and that it’s in the staging area:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    new file:   tutorials/.keep
+</code></pre>
+<p>You can now commit this addition to the repository. But, instead of invoking that whole business with Vim and a text editor, there’s a shortcut way to commit a file to the repository and add a message all in one shot.</p>
+
+<p>Execute the following command to commit the staged changes to your repository:</p>
+<pre><code class="bash">git commit -m "Adding empty tutorials directory"
+</code></pre>
+<p>You’ll see the following, confirming your change committed:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git commit -m "Adding empty tutorials directory"
+[master ce6971f] Adding empty tutorials directory
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 tutorials/.keep
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Depending on the project or organization you’re working with, you’ll often find that there are standards around what to put inside Git commit messages.</p>
+
+<p>The early portions of this book kept things simple with a single-line commit message, but, in the advanced sections of this book, you’ll investigate why following some standards like the 50/72 rule proposed by Tim Pope at <a href="https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html</a> will make your life easier when you get deeper into Git.</p>
+</blockquote>
+
+<p>Once again, use <code>git status</code> to see that there’s nothing left to commit:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git status
+On branch master
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+</code></pre>
+<p>You may have realized that all these little commits give you a piecemeal view of what Git is doing with your files. And, as you keep working on your project, you’ll probably want to see a historical view of what you’ve done. Git provides a way to view the history of your files, also known as the <strong>log</strong>.</p>
+
+<h2>Looking at Git log</h2>
+
+<p>You’ve done a surprising number of things over the last few chapters. To see what you’ve done, execute the following command:</p>
+<pre><code class="bash">git log
+</code></pre>
+<p>You’ll get a pile of output; I’ve shown the first few bits of my log below:</p>
+<pre><code class="bash">commit 761a50d148a9d241712e3be4630db3dad6e010c8 (HEAD -> master)
+Author: Chris Belanger <chris@example.com>
+Date:   Sun Jun 16 06:53:03 2019 -0300
+
+    Adding empty tutorials directory
+
+commit dbcfe56fa47a1a1547b8268a60e5b67de0489b95
+Author: Chris Belanger <chris@example.com>
+Date:   Sun Jun 16 06:51:54 2019 -0300
+
+    Added new book entry and marked Git book complete
+
+commit c47084959448d2e0b6877832b6bd3ae70f70b187 (origin/master, origin/HEAD)
+Author: Chris Belanger <chris@razeware.com>
+Date:   Thu Jan 10 10:32:55 2019 -0400
+
+    Going to try this livestreaming thing
+
+commit 629cc4d309cdcfe508791b09da447c3633448f07
+Author: Chris Belanger <chris@razeware.com>
+Date:   Thu Jan 10 10:32:17 2019 -0400
+
+    Some scratch ideas for the iOS team
+.
+.
+.
+.
+</code></pre>
+<p>You’ll see all of your commits, in reverse chronological order.</p>
+
+<blockquote>
+<p><strong>Note</strong>: Depending on the number of lines you can see at once in your terminal program, your output may be paginated, using a reader like <code>less</code>. If you see a colon on the last line of your terminal screen, this is likely the case. Simply press the <strong>Space bar</strong> to read subsequent pages of text.</p>
+
+<p>When you get to the end of the file, you’ll see (END). At any point, you can press the <strong>Q</strong> key to quit back to your command prompt.</p>
+</blockquote>
+
+<p>The output above shows you your own commit messages, which are useful... to a point. Since Git knows everything about your files, you can use <code>git log</code> to see every detail of your commits, such as the actual changes, or diff, of each commit.</p>
+
+<p>To see this, execute the following command:</p>
+<pre><code class="bash">git log -p
+</code></pre>
+<p>This shows you the actual diffs of your commits, to help you see what specifically changed. Here’s a sample from my results:</p>
+<pre><code class="bash">commit ce6971fbdb945fc5fb01b739b9dea9c9ae193cae (HEAD -> master)
+Author: Chris Belanger <chris@razeware.com>
+Date:   Wed Jan 16 08:22:36 2019 -0400
+
+    Adding empty tutorials directory
+
+diff --git a/tutorials/.keep b/tutorials/.keep
+new file mode 100644
+index 0000000..e69de29
+
+commit 57f31b37ea843d1f0692178c99307d96850eca57
+Author: Chris Belanger <chris@razeware.com>
+Date:   Fri Jan 11 10:16:13 2019 -0400
+
+    Added new book entry and marked Git book complete
+
+diff --git a/books/book_ideas.md b/books/book_ideas.md
+index 1a92ca4..5086b1f 100644
+--- a/books/book_ideas.md
++++ b/books/book_ideas.md
+@@ -7,4 +7,5 @@
+ - [ ] CVS by tutorials
+ - [ ] Fortran for fun and profit
+ - [x] RxSwift by tutorials
+-- [ ] Mastering Git
++- [x] Mastering Git
++- [ ] Care and feeding of developers
+.
+.
+.
+</code></pre>
+<p>In reverse chronological order, I’ve added the <strong>.keep</strong> file to the <strong>tutorials</strong> directory, and made some modifications to the <strong>book_ideas.md</strong> file.</p>
+
+<blockquote>
+<p><strong>Note</strong>: Chapter 6, “Viewing Git History,” will take an in-depth look at the various facets of <code>git log</code>, and it will show you how to use the various options of <code>git log</code> to get some really interesting information about the activity on your repository.</p>
+</blockquote>
+
+<p>Now that you have a pretty good understanding of how to stage changes and commit them to your repository, it’s time for the challenge for this chapter!</p>
+
+<h2>Challenge: Add some tutorial ideas</h2>
+
+<p>You have a great directory to store tutorial ideas, so now it’s time to add those great ideas. Your tasks in this challenge are:</p>
+
+<ol>
+<li>Create a new file named <strong>tutorial_ideas.md</strong> inside the <strong>tutorials</strong> directory.</li>
+<li>Add a heading to the file: <code># Tutorial Ideas</code>.</li>
+<li>Populate the file with a few ideas, following the format of the other files, for example, <code>[ ] Mastering PalmOS</code>.</li>
+<li>Save your changes.</li>
+<li>Add those changes to the staging area.</li>
+<li>Commit those staged changes with an appropriate message.</li>
+</ol>
+
+<p>If you get stuck, or want to check your solution, you can always find the answer to this challenge under the <strong>challenges</strong> folder for this chapter.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li>A <strong>commit</strong> is essentially a snapshot of the particular state of the set of files in the repository at a point in time.</li>
+<li>The <strong>working tree</strong> is the collection of project files that you work with directly.</li>
+<li><code>git status</code> shows you the current state of your working tree.</li>
+<li>Git thinks about the files in your working tree as being in three distinct states: unmodified, modified and staged.</li>
+<li><code>git add &lt;filename&gt;</code> lets you add changes from your working tree to the staging area.</li>
+<li><code>git add .</code> adds all changes in the current directory and its subdirectories.</li>
+<li><code>git add &lt;directoryname&gt;/*</code> lets you add all changes in a specified directory.</li>
+<li><code>git diff</code> shows you the difference between your working tree and the staging area.</li>
+<li><code>git diff --staged</code> shows you the difference between your staging area and the last commit to the repository.</li>
+<li><code>git commit</code> commits all changes in the staging area and opens Vim so you can add a commit message.</li>
+<li><code>git commit -m &quot;&lt;your message here&gt;&quot;</code> commits your staged changes and includes a message without having to go through Vim.</li>
+<li><code>git log</code> shows you the basic commit history of your repository.</li>
+<li><code>git log -p</code> shows the commit history of your repository with the corresponding diffs.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>Now that you’ve learned how to build up commits in Git, head on to the next chapter where you’ll learn more about the art of staging your changes, including how Git understands the moving and deleting of files, how to undo staged changes that you didn’t actually mean to make, and your next new commands: <code>git reset</code>, <code>git mv</code> and <code>git rm</code>.</p>
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter2.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter4.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>

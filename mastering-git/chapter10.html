@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter9.html">< Previous Page</a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 10: Merging</h1>
+
+<p>Branching a repository is only the first half of supporting parallel and concurrent development; eventually, you have to put all those branched bits back together again. And, yes, that operation can be as complex as you think it might be!</p>
+
+<p><strong>Merging</strong> is the mechanism by which Git combines what you’ve done, with the work of others. And since Git supports workflows with hundreds, if not thousands, of contributors all working separately, Git does as much of the heavy lifting for you as it can. Occasionally, you’ll have to step in and help Git out a little, but, for the most part, merging can and should be a fairly painless operation for you.</p>
+
+<h2>A look at your branches</h2>
+
+<p>If you were to visualize the branching history of your current <strong>ideas</strong> repository, it would look something like this:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/graph.png" style="width: 100%;"/></figure>
+
+<p>In the image above, you can see the following:</p>
+
+<ol>
+<li>This is your local <code>master</code> branch. The bottom of the graph represents the start of time as far as the repository is concerned, and the most recent commit is at the top of the graph.</li>
+<li>This is the <code>master</code> branch on <code>origin</code> — that is, the remote repository. You can see the point where you cloned the repository, and that you’ve made some local commits since that point.</li>
+<li>This is the <code>clickbait</code> branch, and since this is the most recent branch you switched to (in the previous chapter), you can see the <code>HEAD</code> label attached to the tip of the <code>clickbait</code> branch. You can see that this branch was created off of <code>master</code> some time before you cloned the repository.</li>
+<li>This is an old branch that was created off of <code>master</code> at some time in the past, and was merged back to <code>master</code> a few commits later. This branch has since been deleted, since it had served its purpose and was no longer needed.</li>
+</ol>
+
+<p>This is a fairly common development workflow; in a small team, <code>master</code> can effectively serve as the main development line, and developers make branches off of <code>master</code> to work on features or bug fixes, without messing with what’s in the main development line. Many teams consider <code>master</code> to represent “what is deployed to production”, since they see <code>master</code> as “the source of truth” in their development environment.</p>
+
+<p>Before you get into merges, you should take a moment to get a bit of “possessive” terminology straight.</p>
+
+<p>When Git is ready to merge two files together, it needs to get a bit of perspective first as to which branch is which. Again, there’s nothing special about <code>master</code>, so you can’t always assume you’re merging your branch back that way. In practice, you’ll find that you often merge between branches that <em>aren’t</em> <code>master</code>.</p>
+
+<p>So, therefore, Git thinks about branches in terms of <strong>ours</strong> and <strong>theirs</strong>. “Ours” refers to the branch to which you’re merging back to, and “theirs” refers to the branch that you want to pull into “ours”.</p>
+
+<p>Let’s say you want to merge the <code>clickbait</code> branch back into <code>master</code>. In this case, as shown in the diagram below, <code>master</code> is <strong>ours</strong> and the <code>clickbait</code> branch would be <strong>theirs</strong>. Keeping this distinction straight will help you immeasurably in your merging career.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/ours-theirs-example.png" style="width: 80%;"/></figure>
+
+<h2>Three-way merges</h2>
+
+<p>You might think that merging is really just taking two revisions, one on each branch, and mashing them together in a logical manner. This would be a <strong>two-way</strong> merge, and it’s the way most of us think about the world: a new element formed by two existing elements is simply the union of the unique and common parts of each element. However, a merge in Git actually uses <em>three</em> revisions to perform what is known as a <strong>three-way merge</strong>.</p>
+
+<p>To see why this is, take a look at the two-way merge scenario below. You have one simple text file; you’re working on one copy of the file while your friend is working on another, separate copy of that same file.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/todo1.png" style="width: 40%;"/></figure>
+
+<p>You delete a line from the top of the file, and your friend adds a line to the bottom of the file.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/todo2.png" style="width: 100%;"/></figure>
+
+<p>Now imagine that you and your friend hand off your work to an impartial third party to merge this text file together. Now, this third party has literally no idea as to what the original state of this file was, so she has to make a guess as to what she should take from each file.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/todo3.png" style="width: 100%;"/></figure>
+
+<p>The end result is not quite what you intended, is it? You’ve ended up with all four lines; the impartial third party reviewer probably assumed Sam added a line to the top as well as a line to the bottom of Chris’ work.</p>
+
+<p>To perform an educated merge of these two files, your impartial third party has to know about the <strong>common ancestor</strong> of both of these files. This common ancestor is the third revision that comes in to play with a three-way merge.</p>
+
+<p>Now, imagine you and your friend <em>also</em> provided the original file that you both started with — the common ancestor — to your impartial third party. She could compare each new file’s changes to the original file, figure out the diff of your changes, figure out the diff of your friend’s changes, and create the correct resulting merged document from the diffs of each.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/todo4.png" style="width: 100%;"/></figure>
+
+<p>That’s better. And this, essentially, is what Git does in an automated fashion. By performing three-way merges on your content, Git gets it right most of the time. Once in a while, Git won’t be able to figure things out on its own, and you’ll have to go in there and help it out a little bit. But you’ll get into these scenarios a little later on in this book when you work on <strong>merge conflicts</strong>, which are a lot less scary than they sound.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/todo5.png" style="width: 40%;"/></figure>
+
+<p>It’s time for you to try out some merging yourself. Open up Terminal, navigate to the folder that houses your repository, and get ready to see how merging works in action.</p>
+
+<h2>Merging a branch</h2>
+
+<p>In this scenario, you’re going to look at the work that someone else has made in the <code>clickbait</code> branch of the <strong>ideas</strong> repository, and merge those changes back into <code>master</code>.</p>
+
+<p>Make sure you’re on the <code>clickbait</code> branch by executing the following command:</p>
+<pre><code class="bash">git checkout clickbait
+</code></pre>
+<p>Execute the following command to see what’s been committed on this branch that you’ll want to merge back to <code>master</code>:</p>
+<pre><code class="bash">git log clickbait --not master
+</code></pre>
+<p>This little gem is quite nice to keep on hand, as it tells you “what are the commits that are just in the <code>clickbait</code> branch, but not in <code>master</code>?” Just executing <code>git log</code> shows you <em>all</em> history of this branch, right back to the original creation of the <code>master</code> branch, which is too much information for your purposes.</p>
+
+<p>You’ll see the following output:</p>
+<pre><code class="bash">commit e69a76a6febf996a44a5de4dda6bde8569ef02bc (HEAD -> clickbait, origin/clickbait)
+Author: Chris Belanger <chris@razeware.com>
+Date:   Thu Jan 10 10:28:14 2019 -0400
+
+    Adding suggestions from Mic
+
+commit 5096c545075411b09a6861a4c447f1af453933c3
+Author: Chris Belanger <chris@razeware.com>
+Date:   Thu Jan 10 10:27:10 2019 -0400
+
+    Adding first batch of clickbait ideas
+</code></pre>
+<p>Ok, there’s two changes to merge back in; guess you’d better get cracking and merge these clickbait ideas before you lose any more traffic to your site.</p>
+
+<p>To see the contents of the new file that’s in this branch, execute the following command:</p>
+<pre><code class="bash">cat articles/clickbait_ideas.md
+</code></pre>
+<p>Some great ideas in there, for sure.</p>
+
+<p>Recall that merging is the action of <strong>pulling in changes</strong> that have been done on another branch. In this case, you want to pull the changes from <code>clickbait</code> into the <code>master</code> branch. To do that, you’ll have to be on the <code>master</code> branch first.</p>
+
+<p>Execute the following to move to the <code>master</code> branch:</p>
+<pre><code class="bash">git checkout master
+</code></pre>
+<p>Now, where is that <strong>articles/clickbait_ideas.md</strong> you looked at in the other branch? Execute that same command, again:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ cat articles/clickbait_ideas.md
+cat: articles/clickbait_ideas.md: No such file or directory
+</code></pre>
+<p>It’s not there. That makes sense, since you haven’t yet merged that file into the <code>master</code> branch, so it’s not going to be there when you switch back to <code>master</code>.</p>
+
+<p>You’re now back on the <code>master</code> branch, ready to pull in the changes from the <code>clickbait</code> branch. But just  Execute the following command to merge the changes from <code>clickbait</code> to <code>master</code>:</p>
+<pre><code class="bash">git merge clickbait
+</code></pre>
+<p>Oh, heck, you’re back in Vim. Well, at least Git has created a nice default message for you: <code>Merge branch &#39;clickbait&#39;</code>. As nice as that is, you’ll probably want a bit more detail in there. But that’s OK - you know what you’re doing by now, don’t you? If not, here is a quick cheatsheet for you:</p>
+
+<ul>
+<li>Press <strong>I</strong> to enter Insert mode.</li>
+<li>Cursor down to the line below the provided merge message.</li>
+<li>Press Enter to create a blank line.</li>
+<li>Add some details to your commit message. I suggest “These are some clickbait ideas... whether anyone wants them or not.”</li>
+<li>Press Escape to exit out of Insert mode.</li>
+<li>Press <strong>:</strong> (colon) to enter Command mode.</li>
+<li>Type <strong>wq</strong> and press Enter to write this file and quit the Vim editor.</li>
+</ul>
+
+<p>As soon as you quit Vim, Git starts the merge operation for you and commits that merge, and it’s likely done even before you know it.</p>
+
+<p>Now, you can take a look at Git’s graphical representation of the repository at this point:</p>
+<pre><code class="bash">*   55fb2dc (HEAD -> master) Merge branch 'clickbait'
+|\
+| * e69a76a (origin/clickbait, clickbait) Adding suggestions from Mic
+| * 5096c54 Adding first batch of clickbait ideas
+* | 477e542 Adding .gitignore files and HTML
+* | ffcedc2 Adds all the good ideas about management
+* | 8409427 Removes terrible live streaming ideas
+* | 67fd0aa Moves platform ideas to website directory
+* | 0ddfac2 Updates book ideas for Symbian and MOS 6510
+* | 6c88142 Adding some tutorial ideas
+* | ce6971f Adding empty tutorials directory
+* | 57f31b3 Added new book entry and marked Git book complete
+* | c470849 (origin/master, origin/HEAD) Going to try this livestreaming thing
+* | 629cc4d Some scratch ideas for the iOS team
+|/
+* fbc46d3 Adding files for article ideas
+*   5fcdc0e Merge branch 'video_team'
+|\
+| * cfbbca3 Removing brain download as per ethics committee
+| * c596774 Adding some video platform ideas
+| * 06f468e Adding content ideas for videos
+* | 39c26dd I should write a book on git someday
+* | 43b4998 Adding book ideas file
+|/
+* becd762 Creating the directory structure
+* 7393822 Initial commit
+</code></pre>
+<p>You can see at the top of the graph that Git has merged in your <code>clickbait</code> branch to <code>master</code> and that <code>HEAD</code> has now moved up to the latest revision, i.e., your merge commit.</p>
+
+<p>If you want to prove that the file has now been brought into the <code>master</code> branch, execute the following command:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ cat articles/clickbait_ideas.md
+</code></pre>
+<p>You’ll see the contents of the file spat out to the console.</p>
+
+<h2>Fast-forward merge</h2>
+
+<p>There’s another type of merge that happens in Git, known as the <strong>fast-forward</strong> merge. To illustrate this, think back to the example above, where you and your friend were working on a file. Your friend has gone away (probably hired away by Google or Apple, lucky sod), and you’re now working on that file by yourself.</p>
+
+<p>Once you’ve finished your revisions, you take your updated file, along with the original file (the common ancestor, again) to your impartial third party for merging. She’s going to look at the common ancestor file, along with your new file, but she isn’t going to see a third file to merge.</p>
+
+<p>In this case, she’s just going to commit your file overtop of the old file, because <em>there’s nothing to merge</em>.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/21/merging/images/todo6.png" style="width: 100%;"/></figure>
+
+<p>If no other person had touched the original file since you picked it up and started working on it, there’s no real point in doing anything fancy, here. And while Git is far from lazy, it is terribly efficient and only does the work it absolutely needs to do to get the job done. This, in effect, is exactly what a fast-forward merge does.</p>
+
+<p>To see this in action, you’ll create a branch off of <code>master</code>, make a commit, and then merge the branch back to <code>master</code> to see how a fast-forward merge works.</p>
+
+<p>First, execute the following to ensure you’re on the <code>master</code> branch:</p>
+<pre><code class="bash">git checkout master
+</code></pre>
+<p>Now, create a branch named <code>readme-updates</code> to hold some changes to the README.md file:</p>
+<pre><code class="bash">git checkout -b readme-updates
+</code></pre>
+<p>Git creates that branch and automatically switches you to it. Now, open <strong>README.md</strong> in your favorite text editor, and add the following text to the end of the file:</p>
+<pre><code class="none">This repository is a collection of ideas for articles, content and features at raywenderlich.com.
+
+Feel free to add ideas and mark taken ideas as "done".
+</code></pre>
+<p>Save your changes, and return to Terminal. Stage your changes with the following command:</p>
+<pre><code class="bash">git add README.md
+</code></pre>
+<p>Now, commit that staged change with an appropriate message:</p>
+<pre><code class="bash">git commit -m "Adding more detail to the README file"
+</code></pre>
+<p>Now, to merge that change back to <code>master</code>. Remember — you need to be on the branch you want to pull the changes <em>into</em>, so you’ll have to switch back to <code>master</code> first:</p>
+<pre><code class="bash">git checkout master
+</code></pre>
+<p>Now, before you merge that change in, take a look at Git’s graph of the repository, using the <code>--all</code> flag to look on all branches, not just <code>master</code>:</p>
+<pre><code class="bash">git log --graph --oneline --all
+</code></pre>
+<p>Take a look at the top two lines of the result:</p>
+<pre><code class="bash">* 78eefc6 (readme-updates) Adding more detail to the README file
+*   55fb2dc (HEAD -> master) Merge branch 'clickbait'
+</code></pre>
+<p>Git doesn’t represent this as a fork in the branch — because it doesn’t need to. Just as you saw in the example above with the single file, there’s no need to merge anything, here. And that begs the question: If there’s nothing to merge here, what will the resulting commit look like?</p>
+
+<p>Time to find out! Execute the following command to merge <code>readme-updates</code> to <code>master</code>:</p>
+<pre><code class="bash">git merge readme-updates
+</code></pre>
+<p>Git tells you that it’s done a fast-forward merge, right in the output:</p>
+<pre><code class="bash">~/MasteringGit/ideas $ git merge readme-updates
+Updating 55fb2dc..78eefc6
+Fast-forward
+ README.md | 4 ++++
+ 1 file changed, 4 insertions(+)
+</code></pre>
+<p>You’ll notice that Git didn’t bring up the Vim editor, prompting you to add a commit message. You’ll see why this is the case in just a moment. First, have a look at the resulting graph of the repository, using the command below:</p>
+<pre><code class="bash">git log --graph --oneline --all
+</code></pre>
+<p>Take a close look at the top two lines of the result. It looks like nothing much has changed, but take a look at where <code>HEAD</code> points now:</p>
+<pre><code class="bash">* 78eefc6 (HEAD -> master, readme-updates) Adding more detail to the README file
+*   55fb2dc Merge branch 'clickbait'
+</code></pre>
+<p>Here, all Git has done is move the <code>HEAD</code> label to your latest commit. And this makes sense; Git isn’t going to create a new commit if it doesn’t have to. It’s easier to just move the <code>HEAD</code> label along, since there’s nothing to merge in this case. And <em>that’s</em> why Git didn’t prompt you to enter a commit message in Vim for this fast-forward merge.</p>
+
+<h2>Forcing merge commits</h2>
+
+<p>You can force Git to not treat this as a fast-forward merge, if you don’t want it to behave that way. For instance, you may be following a particular workflow in which you check that certain branches have been merged back to <code>master</code> before you build. But if those branches resulted in a fast-forward merge, for all intents and purposes, it will look like those changes were done directly on <code>master</code>, which isn’t the case.</p>
+
+<p>To force Git to create a merge commit when it doesn’t really need to, all you need to do is add the <code>--no-ff</code> option to the end of your <code>merge</code> command. The challenge for this chapter will let you create a fast-forward situation, and see the difference between a merge commit and a fast-forward merge.</p>
+
+<blockquote>
+<p><strong>Note</strong>: Why wouldn’t you always want a merge commit, especially if branching and merging are such cheap operations in Git? What’s the point of moving <code>HEAD</code> along? Wouldn’t it just be more clear to always have a merge commit?</p>
+
+<p>This is a question that’s just about as politically loaded as the age-old PC vs. Mac debate, the Android vs. iOS debate, or the cats vs. dogs debate (in which case, the answer is “dogs,” if you were wondering).</p>
+
+<p>This becomes particularly important on larger software projects with multiple contributors, where your commit history can have thousands upon thousands of commits over time. Merge commits can be seen as preserving the historical context of a feature or bugfix branch; it’s clear that you branched, fixed, and then merged back in. Conversely, having lots of branches and merge commits — especially implicit merge commits, which you’ll encounter later in this book — can make a repository’s history harder to read and understand.</p>
+
+<p>There’s no real “right” answer, here; but don’t believe people on the internet who claim that “merge commits are evil,” because they’re not. Git’s job is to do its best to record what happened in your repository, and your workflow shouldn’t necessarily have to change just to make sure that your commit history is linear and clean. However, you’ll undoubtedly work with teams on both sides of the issue, so as long as you understand merge commits in Git, you’ll do just fine, no matter which workflow your team champions.</p>
+</blockquote>
+
+<h2>Challenge 1: Create a non-fast-forward merge</h2>
+
+<p>For this challenge, you’ll create a new branch, make a modification to the README.md file again, commit that to your branch, and merge that branch back to <code>master</code> as a non-fast-forward merge.</p>
+
+<p>This challenge will require the following steps:</p>
+
+<ol>
+<li>Ensure you’re on the <code>master</code> branch.</li>
+<li>Create a branch named <code>contact-details</code>.</li>
+<li>Switch to that branch.</li>
+<li>Edit the README.md file and add the following text to the end of the file: &quot;Contact: <a href="mailto:support@razeware.com">support@razeware.com</a>&quot;.</li>
+<li>Save your edits to the file.</li>
+<li>Stage your changes.</li>
+<li>Commit your changes with an appropriate commit message, such as &quot;Adding README contact information.&quot;</li>
+<li>Switch back to the <code>master</code> branch.</li>
+<li>Pull up the graph of the repository, and don’t forget to use the <code>--all</code> option to see history of all branches. Make note of how <code>master</code> and <code>contact-details</code> look on this graph.</li>
+<li>Merge in the changes from <code>contact-details</code>, using the <code>--no-ff</code> option.</li>
+<li>Enter something appropriate in the merge message in Vim when prompted. Use the cheatsheet above to help you navigate through Vim if necessary.</li>
+<li>Pull up the graph of the repository again. How can you tell that this is a merge commit, and not a fast-forward commit?</li>
+</ol>
+
+<p>If you get stuck, or want to check your solution, you can always find the answer to this challenge under the challenges folder for this chapter.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li><strong>Merging</strong> combines work done on one branch with work done on another branch.</li>
+<li>Git performs <strong>three-way merges</strong> to combine content.</li>
+<li><strong>Ours</strong> refers to the branch to which you want to pull changes into; <strong>theirs</strong> refers to the branch that has the changes you want to pull into <strong>ours</strong>.</li>
+<li><code>git log &lt;theirs&gt; --not &lt;ours&gt;</code> shows you what commits are on the branch you want to merge, that aren’t in your branch already.</li>
+<li><code>git merge &lt;theirs&gt;</code> merges the commits on the “theirs” branch into &quot;our&quot; branch.</li>
+<li>Git automatically creates a merge commit message for you, and lets you edit it before continuing with the merge.</li>
+<li>A <strong>fast-forward</strong> merge happens when there have been no changes to “ours” since you branched off “theirs”, and results in no merge commit being made.</li>
+<li>To prevent a fast-forward merge and create a merge commit instead, use the <code>--no-ff</code> option with <code>git merge</code>.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>To this point, you’ve been doing pretty much everything on your local repository. But you want the rest of your team to see the amazing work you’ve been doing, don’t you? In the next chapter, you’ll learn how to synchronize your repository with a remote repository with <code>git push</code>, <code>git pull</code>, <code>git remote</code> and much more.</p>
+
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter9.html">< Previous Page</a></div>
+</nav>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter6.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter8.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 7: Branching</h1>
+
+<p>One of the driving factors behind Git’s original design was to support the messy, non-linear approach to development that stems from working on large-scale, fast-moving projects. The need to split off development from the main development line, make changes independently and in isolation of other changes on the main development line, easily merge those changes back in, and do all this in a lightweight manner, was what drove the creators of Git to build a very lightweight, elegant model to support this kind of workflow.</p>
+
+<p>In this chapter, you’ll explore the first half of this paradigm: <strong>branching</strong>. You’ve touched on branching quite briefly in Chapter 1, “A Crash Course in Git,” but you probably didn’t quite understand what you, or Git, were <em>doing</em> in that moment.</p>
+
+<p>Although you can hobble through your development career never really understanding how branching in Git actually works, branching is <em>incredibly</em> important to the development workflows of many development teams, both large and small, so knowing what’s going on under the hood, and having a solid mental model of your repository’s branching structure will help you immensely as your projects grow in size and complexity.</p>
+
+<h2>What is a commit?</h2>
+
+<p>That question was asked and answered in a shallow manner a few chapters ago, but it’s a good time to revisit that question and explore commits in more detail.</p>
+
+<p>Recall that a commit represents the state of your project tree — your directory — at a particular point in time:</p>
+<pre><code class="none">├── LICENSE
+├── README.md
+├── articles
+│   ├── clickbait_ideas.md
+│   ├── ios_article_ideas.md
+│   └── live_streaming_ideas.md
+├── books
+│   └── book_ideas.md
+└── videos
+    ├── content_ideas.md
+    └── platform_ideas.md
+</code></pre>
+<p>You probably think about your files primarily in terms of their content, their position inside the directory hierarchy, and their names. So when you think of a commit, you’re likely to think about the state of the files, their content and names at a particular point in time. And that’s correct, to a point: Git also adds some more information to that “state of your files” concept in the form of metadata.</p>
+
+<p>Git metadata includes such things like “when was this committed?” and “who committed this?”, but most importantly, it includes the concept of “where did this commit originate from?” — and that piece of information is known as the commit’s <strong>parent</strong>. A commit can have one or two parents, depending on how it was branched and merged back in, but you’ll get to that point later.</p>
+
+<p>Git takes all that metadata, including a reference to this commit’s parent, and wraps that up with the state of your files as the commit. Git then <strong>hashes</strong> that collection of things using <strong>SHA1</strong> to create an ID, or <strong>key</strong>, that is unique to that commit inside your repository. This makes it extremely easy to refer to a commit by its hash value, or as you saw in the previous chapter, its short hash.</p>
+
+<h2>What is a branch?</h2>
+
+<p>The concept of a branch is massively simple in Git: It’s simply a reference, or a label, to a commit in your repository. That’s it. Really. And because you can refer to a commit in Git simply through its hash, you can see how creating branches is a terribly cheap operation. There’s no copying, no extra cloning, just Git saying “OK, your new branch is a label to commit <code>477e542</code>”. Boom, done.</p>
+
+<p>As you make commits on your branch, that label for the branch gets moved forward and updated with the hash of each new commit. Again, all Git does is update that label, which is stored as a simple file in that hidden <strong>.git</strong> repository, as a really cheap operation.</p>
+
+<p>You’ve been working on a branch all along — did you realize that? Yes, <code>master</code> is nothing but a branch. It’s only by convention, and the default name that Git applies to this default branch when it creates a new repository, that we say “Oh, the <code>master</code> branch is the <em>main</em> branch.”</p>
+
+<p>There’s nothing special about <code>master</code>; again, Git simply knows that the <code>master</code> branch is a revision in your repository pointed to by a simple label held in a file on disk. Sorry to dash any notion that <code>master</code> was magic or something.</p>
+
+<h2>Creating a branch</h2>
+
+<p>You created a branch before in the crash-course chapter, but now you’re going to create a branch and watch exactly what Git is doing.</p>
+
+<p>The command to create a branch in Git is, unsurprisingly, <code>git branch</code>, followed by the name of your branch.</p>
+
+<p>Execute the following command to create a new branch:</p>
+<pre><code class="bash">git branch testBranch
+</code></pre>
+<p>Git finishes that action with little fanfare, since a new branch is not a big deal to Git.</p>
+
+<h2>How Git tracks branches</h2>
+
+<p>To see that Git actually <em>did</em> something, execute the following command to see what Git’s done in the background:</p>
+<pre><code class="bash">ls .git/refs/heads/
+</code></pre>
+<p>This directory contains the files that point to all of your branches. I get the following result of two files in that directory:</p>
+<pre><code class="bash">master      testBranch
+</code></pre>
+<p>Oh, that’s interesting — a file named <strong>testBranch</strong>, the same as your branch name. Take a look at <strong>testBranch</strong> to see what’s inside, using the following command:</p>
+<pre><code class="bash">cat .git/refs/heads/testBranch
+</code></pre>
+<p>Wow — Git <em>is</em> really bare-bones about branches. All that’s in there is a single hash value. To take this to a new level of pedantry, you can prove that the label <strong>testBranch</strong> is pointing to the actual latest commit on your repository.</p>
+
+<p>Execute the following to see the latest commit:</p>
+<pre><code class="bash">git log -1
+</code></pre>
+<p>You’ll see something like the following (your hash will be different than mine):</p>
+<pre><code class="bash">commit 477e542bfa35942ddf069d85fbe3fb0923cfab47 (HEAD -> master, testBranch)
+Author: Chris Belanger <chris@razeware.com>
+Date:   Wed Jan 23 16:49:56 2019 -0400
+
+    Adding .gitignore files and HTML
+
+</code></pre>
+<p>Let’s pick this apart a little. The commit referenced here is, indeed, the same hash as contained in <strong>testBranch</strong>. The next little bit, <code>(HEAD -&gt; master, testBranch)</code>, means that this commit is pointed to by <em>both</em> the <code>master</code> and the <code>testBranch</code> branches. The reason this commit is pointed to by both labels is because you’ve only created a new branch, and not created any more commits on this branch. So the label can’t move forward until you make another commit.</p>
+
+<h2>Checking your current branch</h2>
+
+<p>Git can easily tell you which branch you’re on, if you ever need to know. Execute the following command to verify you’re working on <strong>testbranch</strong>:</p>
+<pre><code class="bash">git branch
+</code></pre>
+<p>Without any arguments or options, <code>git branch</code> simply shows you the list of local branches on your repository. You should have the two following branches listed:</p>
+<pre><code class="bash">* master
+  testBranch
+</code></pre>
+<p>The asterisk indicates that you’re still on the <strong>master</strong> branch, even though you’ve just created a new branch. That’s because Git won’t switch to a newly created branch unless you tell it explicitly.</p>
+
+<h2>Switching to another branch</h2>
+
+<p>To switch to <strong>testBranch</strong>, execute the <code>checkout</code> command like so:</p>
+<pre><code class="bash">git checkout testBranch
+</code></pre>
+<p>Git responds with the following:</p>
+<pre><code class="bash">Switched to branch 'testBranch'
+</code></pre>
+<p>That’s really all there is to creating and switching between branches.</p>
+
+<blockquote>
+<p><strong>Note</strong>: Admittedly, the term <code>checkout</code> is a bit of a misnomer, since if you’ve ever owned a library card, you know that checking out a book makes that book inaccessible to anyone else until you return it.</p>
+
+<p>That term is a holdover from the way that some older version control systems functioned, as they used a lock-modify-unlock model, which prevented anyone else from modifying the file at the same time. It worked really well for preventing merge conflicts, but pretty much killed any form of distributed, concurrent development.</p>
+
+<p>Speaking of old version control systems, if any of you used PVCS Version Manager back in the day (c. 2000 or so), drop me a line and we can swap horror stories about the amazingly sparse documentation, the endless fighting with semaphores, and all the other fun bits that came along with that piece of software.</p>
+</blockquote>
+
+<p>That’s enough poking around with <strong>testBranch</strong>, so switch back to <strong>master</strong> with the following command:</p>
+<pre><code class="bash">git checkout master
+</code></pre>
+<p>You really don’t need <strong>testBranch</strong> anymore, since there are other, real branches to be explored. Delete <strong>testBranch</strong> with the following command:</p>
+<pre><code class="bash">git branch -d testBranch
+</code></pre>
+<p>Time to take a look at some real branches. You already have one in your repository, just waiting for you to go in and start doing some work... what’s that? Oh, you don’t remember seeing that branch when you last executed <code>git branch</code>? That’s because <code>git branch</code> by itself only shows the local branches in your repository.</p>
+
+<p>When you first cloned this repository (which was a fork from the original <strong>ideas</strong> repository), Git started tracking both the local repository, as well as the <strong>remote</strong> repository — i.e., the forked repository that you created on GitHub. Git knows about the branches on the remote as well as on your local system.</p>
+
+<p>So because of this synchronization between your local repository and the remote repository, Git knows that any commits you make locally — and will likely push back to the remote — belong on a particular, matching, remote branch. Equally well, Git knows that any changes made on a branch on the remote — perhaps by a fellow developer somewhere in the world — belong in a specific, matching directory on your local system.</p>
+
+<h2>Viewing local and remote branches</h2>
+
+<p>To see all of the branches that Git knows about on this repository, either local or remote, execute the following command:</p>
+<pre><code class="bash">git branch --all
+</code></pre>
+<p>Git will respond with something similar to the following:</p>
+<pre><code class="bash">* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/clickbait
+  remotes/origin/master
+</code></pre>
+<p>Git shows you all of the branches in your local and remote repositories. In this case, the remote only has one branch: <strong>clickbait</strong>. All of the other branches listed are effectively <strong>master</strong> or pointers to <strong>master</strong>.</p>
+
+<p>You have some work to do on the clickbait branch. If everyone else is doing it, you should, too, right? To get this branch down to your machine, tell Git to start tracking it, and switch to this branch all in one action, execute the following command:</p>
+<pre><code class="bash">git checkout --track origin/clickbait
+</code></pre>
+<p>Git responds with the following:</p>
+<pre><code class="bash">Branch 'clickbait' set up to track remote branch 'clickbait' from 'origin'.
+Switched to a new branch 'clickbait'
+</code></pre>
+<h2>Explaining origin</h2>
+
+<p>OK, what is this <code>origin</code> thing that you keep seeing?</p>
+
+<p><code>origin</code> is another one of those convenience conventions that Git uses. Just like <strong>master</strong> is the default name for the first branch created in your repository, <code>origin</code> is the default alias for the location of the remote repository from where you cloned your local repository.</p>
+
+<p>To see this, execute the following command to see where Git thinks <code>origin</code> lives:</p>
+<pre><code class="bash">git remote -v
+</code></pre>
+<p>You should see something similar to the following:</p>
+<pre><code class="bash">origin  https://www.github.com/belangerc/ideas (fetch)
+origin  https://www.github.com/belangerc/ideas (push)
+</code></pre>
+<p>You’ll have something different in your URLs, instead of <code>belangerc</code>. But you can see here that <code>origin</code> is simply an alias for the URL of the remote repository. That’s all.</p>
+
+<p>To see Git’s view of all local and remote branches now, execute the following command:</p>
+<pre><code class="bash">git branch --all -v
+</code></pre>
+<p>Git will respond with its understanding of the current state of the local and remote branches, with a bit of extra information provided by the <code>-v</code> (verbose) option:</p>
+<pre><code class="bash">* clickbait                e69a76a Adding suggestions from Mic
+  master                   477e542 [ahead 8] Adding .gitignore files and HTML
+  remotes/origin/HEAD      -> origin/master
+  remotes/origin/clickbait e69a76a Adding suggestions from Mic
+  remotes/origin/master    c470849 Going to try this livestreaming thing
+</code></pre>
+<p>Git tells you that you are on the <strong>clickbait</strong> branch, and you can also see that the hash for the local <strong>clickbait</strong> branch is the same as the remote one, as you’d expect.</p>
+
+<p>Of interest is the <strong>master</strong> branch, as well. Git is tracking your local <strong>master</strong> branch against the remote one, and it knows that your local <strong>master</strong> branch is eight commits ahead of the remote. Git will also let you know if you’re behind the remote branch as well; that is, if there are any commits on the remote branch that you haven’t yet pulled down to your local branch.</p>
+
+<h2>Viewing branches graphically</h2>
+
+<p>To see a visual representation of the current state of your local branches, execute the following command:</p>
+<pre><code class="bash">git log --oneline --graph
+</code></pre>
+<p>The tip of the graph, which is the latest commit, tells you where you are:</p>
+<pre><code class="bash">* e69a76a (HEAD -> clickbait, origin/clickbait) Adding suggestions from Mic
+</code></pre>
+<p>Your current <code>HEAD</code> points to the clickbait branch, and you’re at the same point as your remote repository.</p>
+
+<h2>A shortcut for branch creation</h2>
+
+<p>I confess, I took you the long way ’round with that command <code>git checkout --track origin/clickbait</code>, but seeing the long form of that command hopefully helped you understand what Git actually <em>does</em> when it checks out and tracks a branch from the remote.</p>
+
+<p>There’s a much shorter way to checkout and switch to an existing branch on the remote: <code>git checkout clickbait</code> works equally well, and is a bit easier to type and to remember.</p>
+
+<p>When you specify a branch name to <code>git checkout</code>, Git checks to see if there is a local branch that matches that name to switch to. If not, then it looks to the <code>origin</code> remote, and if it finds a branch on the remote matching that name, it assumes that is the branch you want, checks it out for you, and switches you to that branch. Rather nice of it to take care of all that for you.</p>
+
+<p>There’s also a shortcut command which solves the two-step problem of <code>git branch &lt;branchname&gt;</code> and <code>git checkout &lt;branchname&gt;</code>: <code>git checkout -b &lt;branchname&gt;</code>. This, again, is a faster way to create a local branch.</p>
+
+<p>Now that you have seen how to create, switch to, and delete branches, it’s time for the short challenge of this chapter, which will serve to reinforce what you’ve learned and show you what to do when you want to delete a local branch that already has a commit on it.</p>
+
+<h2>Challenge 1: Delete a branch with commits</h2>
+
+<p>You don’t want to muck up your existing branches for this challenge, so you’ll need to create a temporary local branch, switch to it, make a commit, and then delete that branch.</p>
+
+<ol>
+<li>Create a temporary branch with the name of <strong>newBranch</strong>.</li>
+<li>Switch to that branch.</li>
+<li>Use the <code>touch</code> command to create an empty <strong>README.md</strong> file in the root directory of your project.</li>
+<li>Add that new <strong>README.md</strong> file to the staging area.</li>
+<li>Commit that change with an appropriate message.</li>
+<li>Checkout the <strong>master</strong> branch.</li>
+<li>Delete <strong>newBranch</strong> — but Git won’t let you delete this branch in its current state. Why?</li>
+<li>Follow the suggestion that Git gives you to see if you can delete this branch.</li>
+</ol>
+
+<p>Remember to use <code>git status</code>, <code>git branch</code> and <code>git log --oneline --graph --all</code> to help get your bearings as you work on this challenge.</p>
+
+<p>If you get stuck, or want to check your solution, you can always find the answer to this challenge under the challenges folder for this chapter.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li>A commit in Git includes information about the state of the files in your repository, along with metadata such as the commit time, the commit creator, and the commit’s parent or parents.</li>
+<li>The hash of your commit becomes the unique ID, or key, to identify that particular commit in your repository.</li>
+<li>A branch in Git is simply a reference to a particular commit by way of its hash.</li>
+<li><code>master</code> is simply a convenience convention, but has come to be accepted as the main branch of a repository.</li>
+<li>Use <code>git branch &lt;branchname&gt;</code> to create a branch.</li>
+<li>Use <code>git branch</code> to see all local branches.</li>
+<li>Use <code>git checkout &lt;branchname&gt;</code> to switch to a local branch, or to checkout and track a remote branch.</li>
+<li>Use <code>git branch -d &lt;branchname&gt;</code> to delete a local branch.</li>
+<li>Use <code>git branch --all</code> to see all local and remote branches.</li>
+<li><code>origin</code>, like <code>master</code>, is simply a convenience convention that is an alias for the URL of the remote repository.</li>
+<li>Use <code>git checkout -b &lt;branchname&gt;</code> to create and switch to a local branch in one fell swoop.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>Get used to branching in Git, because you’ll be doing it often. Lightweight branches are pretty much <em>the</em> reason that Git has drawn so many followers, as it matches the workflow of concurrent development teams.</p>
+
+<p>But there’s little point in being able to branch and work on a branch, without being able to get your work joined back up to the main development branch. That’s <strong>merging</strong>, and that’s exactly what you’ll do in the next chapter!</p>
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter6.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter8.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../vanilla.css" />
+  </head>
+<body>
+  <header>
+  <nav>
+    <div class='left-align'><a href="chapter7.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter9.html">Next Page ></a></div>
+</nav>
+
+</header>
+
+<main>
+
+<h1>Chapter 8: Syncing with a Remote</h1>
+
+<p>Up to this point in the book, you’ve worked pretty much exclusively on your local system, which isn’t to say that’s a bad thing — having a Git repository on your local machine can support a healthy development workflow, even when you are working by yourself.</p>
+
+<p>But where Git really shines is in managing distributed, concurrent development, and that’s what this chapter is all about. You’ve done lots of great work on your machine, and now it’s time to push it back to your remote repository and synchronize what you’ve done with what’s on the server.</p>
+
+<p>And there’s lots of reasons to have a remote repository somewhere, even if you are working on your own. If you ever need to restore your development environment, such as after a hard drive failure, or simply setting up another development machine, then all you have to do is clone your remote repository to your clean machine.</p>
+
+<p>And just because you’re working on your own now doesn’t mean that you won’t always want to maintain this codebase yourself. Down the road, you may want another maintainer for your project, or you may want to fully open-source your code. Having a remote hosted repository makes doing that trivial.</p>
+
+<h2>Pushing your changes</h2>
+
+<p>So many things in Git, as in life, depends on your perspective. Git has perspective standards when synchronizing local repositories with remote ones: <strong>Pushing</strong> is the act of taking your local changes and putting them up on the server, while <strong>pulling</strong> is the act of pulling any changes on the server into your local cloned repository.</p>
+
+<p>So you’re ready to push your changes, and that brings you to your next Git command, handily named <code>git push</code>.</p>
+
+<p>Execute the following command to push your changes up to the server:</p>
+<pre><code class="none">git push origin master
+</code></pre>
+<p>This tells Git to take the changes from the <code>master</code> branch and synchronize the remote repository (<code>origin</code>) with your changes. You’ll see output similar to the following:</p>
+<pre><code class="none">Counting objects: 40, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (36/36), done.
+Writing objects: 100% (40/40), 3.96 KiB | 579.00 KiB/s, done.
+Total 40 (delta 18), reused 0 (delta 0)
+remote: Resolving deltas: 100% (12/12), completed with 3 local objects.
+To https://www.github.com/belangerc/ideas.git
+   c470849..f5c54f0  master -> master
+</code></pre>
+<p>Git’s given you a lot of output in this message, but essentially it’s telling you some high-level information about what it’s done, here: It’s synchronized 12 changed items from your local repository on the remote repository.</p>
+
+<blockquote>
+<p><strong>Note</strong>: Wondering why Git didn’t prompt you for a commit message, here? That’s because a push is not really <em>committing</em> anything; what you’re doing is asking Git to take your changes and synchronize them onto the remote repository. You’re combining your commits with those already on the remote, not creating a new commit on top of what’s already on the remote.</p>
+</blockquote>
+
+<p>Want to see the effect of your changes? Head over to the URL for your repository on GitHub. If you’ve forgotten what that is, you can find it in the output of your <code>git push</code> command. In my case, it’s <code>https://www.github.com/belangerc/ideas</code>, but yours will have a different username in there.</p>
+
+<p>Once there, click the <strong>19 commits</strong> link near the top of your page:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/19/syncing-with-a-remote/images/19-commits.png" style="width: 30%;"/></figure>
+
+<p>You’ll be taken to a list of all of your synchronized changes in your remote repository, and you should recognize the commits that you’ve made in your local repository:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/19/syncing-with-a-remote/images/all-commits.png" style="width: 70%;"/></figure>
+
+<p>That’s one half of the synchronization dance. And the yin to <code>git push</code>’s yang is, unsurprisingly. <code>git pull</code>.</p>
+
+<h2>Pulling changes</h2>
+
+<p>Pulling changes is pretty much the reverse scenario of pushing; Git takes the commits on the remote repo, and it integrates them all with your local commits.</p>
+
+<p>That operation is pretty straightforward when you’re working by yourself on a project; you pull the latest changes from the repository, and, most likely, the remote will always be synchronized with your local, since there’s no one else but you to make any changes.</p>
+
+<p>But the more common scenario is that you’ll be working with others in the same repository, and they will be their own pushing changes to the repository. So most of the time, you won’t have the luxury of pushing your changes onto an untouched repository, and you’ll have to integrate the changes on the remote by pulling them into your repository before you can push your local changes.</p>
+
+<p>To illustrate how this works, and to illustrate what <code>git pull</code> actually does to your repository, you’ll simulate a scenario wherein someone else has made a change to the <code>master</code> branch and pushed their changes before you had a chance to push yours. You’ll see how Git responds to this scenario, and you’ll learn the steps required to solve this issue see how to solve this issue.</p>
+
+<h3>Moving the remote ahead</h3>
+
+<p>First, you have to simulate someone else making a change on the remote. Navigate to the main page on GitHub for your repository: <code>https://github.com/&lt;username&gt;/ideas</code>. Once there, click on the <strong>tutorials</strong> directory link of your project, and then click on <strong>tutorial_ideas.md</strong> to view it in your browser.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/19/syncing-with-a-remote/images/tutorial-ideas-file.png" style="width: 70%;"/></figure>
+
+<p>Click the <strong>edit</strong> icon on the page (the little pencil icon), and GitHub will open a basic editor for you.</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/19/syncing-with-a-remote/images/GitHub-visual-editor.png" style="width: 70%;"/></figure>
+
+<p>Add the following idea to <strong>tutorial_ideas.md</strong> in the editor:</p>
+<pre><code class="none">[ ] Blockchains with BASIC
+</code></pre>
+<p>Then, scroll down to the <strong>Commit changes</strong> section below the editor, add a commit message of your choice in the first field of that section, leave the radio button selection as <strong>Commit directly to the <code>master</code> branch</strong>, and click <strong>Commit changes</strong>.</p>
+
+<p>This creates a new commit on top of the existing <code>master</code> branch on the remote repository, just as if someone else on your development team had pushed the commits from their local system.</p>
+
+<p>Now, create a change to a different file in your local repository.</p>
+
+<p>Return to your terminal program, and edit <strong>books/book_ideas.md</strong> and add the following line to the bottom of the file:</p>
+<pre><code class="none">- [ ] Debugging with the Grace Hopper Method
+</code></pre>
+<p>Save your changes and exit.</p>
+
+<p>Stage the change:</p>
+<pre><code class="none">git add books/book_ideas.md
+</code></pre>
+<p>Now, create a commit on your local repository:</p>
+<pre><code class="none">git commit -m "Adding debugging book idea"
+</code></pre>
+<p>You now have a commit on the head of your local <code>master</code> branch, and you also have a different commit on the head of your remote <code>master</code> branch. Now you want to push this change up to the remote. Well, that’s easy. Just execute the <code>git push</code> command as you normally would:</p>
+<pre><code class="none">git push origin master
+</code></pre>
+<p>Git balks, and returns the following information to you:</p>
+<pre><code class="none">! [rejected]        master -> master (non-fast-forward)
+error: failed to push some refs to 'https://www.github.com/belangerc/ideas'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. Integrate the remote changes (e.g.
+hint: 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+</code></pre>
+<p>Well, that didn’t work as expected. Git is quite helpful sometimes in the hints it gives; in this case, it’s telling you that it detected changes on the remote that you don’t have locally. Since you’d probably want to make sure that your local changes meshed properly with the changes on the remote before you push, you’ll want to pull those changes down to your local system.</p>
+
+<p>Execute the following to pull the changes from the remote into your local:</p>
+<pre><code class="none">git pull origin
+</code></pre>
+<p>Oh, heck, Git has opened up Vim, which means that it’s creating a commit; in this case, it’s creating a merge commit. Why, Git, why?</p>
+<pre><code class="none">Merge branch 'master' of https://github.com/belangerc/ideas
+
+# Please enter a commit message to explain why this merge is necessary,
+# especially if it merges an updated upstream into a topic branch.
+#
+# Lines starting with '#' will be ignored, and an empty message aborts
+# the commit.
+</code></pre>
+<p>You’ll explore what Git is doing shortly, but finish this commit first and let Git get on with whatever it’s doing. Git has already auto-created a commit message for you, so you might as well accept that and try and figure this mess out later. Press <strong>:</strong>, then type <strong>wq</strong> and then press <strong>Enter</strong> to save this commit message and exit out of Vim.</p>
+
+<p>You’re taken back to the command prompt, so execute the following to see what Git has done for you:</p>
+<pre><code class="none">git log --graph --oneline
+</code></pre>
+<p>You’ll see something similar to the following:</p>
+<pre><code class="none">*   a3ee3c2 (HEAD -> master) Merge branch 'master' of https://github.com/belangerc/ideas
+|\  
+| * 8909ec5 (origin/master, origin/HEAD) Added killer blockchain idea
+* | c7f4e7f Adding debugging book idea
+|/  
+* 1e04e39 Adding .gitignore files and HTML
+.
+.
+.
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Wondering what those asterisks (<strong>*</strong>) mean in the graphical representation of your tree? Since commits from different branches are shown stacked one on top of the other, the asterisks simply show you on which branch this commit was made. In this case, you can see the book idea was committed on one branch (your local <code>master</code> branch), and the other commit was created on the remote origin branch.</p>
+</blockquote>
+
+<p>Working up the tree, you have a common ancestor of <code>1e04e39 Adding .gitignore files and HTML
+</code>. Then you have commit <code>c7f4e7f</code>, which is the commit you made on your local repository, followed by <code>8909ec5</code>, your remote commit on the GitHub repository page. And <em>also</em>, there’s this <code>a3ee3c2 Merge branch &#39;master&#39;</code> stuff at the top. And <em>also also</em>, Git shows your remote blockchain commit on a branch. But you didn’t create a branch. You chose the option on the GitHub edit page to commit directly to <code>master</code>. Where did that come from?</p>
+
+<blockquote>
+<p><strong>Note</strong>: It’s seemingly simple scenarios like this — non-conflicting changes to distinct files resulting in a merge commit — that causes newcomers to Git to throw up their hands and say, “What the heck, Git?”</p>
+
+<p>This is why learning Git on the command line can be instructive, as opposed to using a Git GUI client that hides details like this. Seeing what Git is doing under the hood, and, more importantly, understanding <em>why</em>, is what will help you navigate these types of scenarios like a pro.</p>
+</blockquote>
+
+<p>To understand what Git’s doing, you need to dissect the <code>git pull</code> command first, since <code>git pull</code> is not one, but <em>two</em> commands in disguise.</p>
+
+<h3>First step: Git fetch</h3>
+
+<p><code>git pull</code> is really <em>two</em> commands in one: <code>git fetch</code>, followed by <code>git merge</code>.</p>
+
+<p>You haven’t run across <code>git fetch</code> yet. Fetching updates your local repository’s hidden <strong>.git</strong> directory with all of the commits for this repository, both local and remote. Then, Git can figure out what to do with what it’s fetched from the remote; maybe it can fast-forward merge it, maybe it can’t, or maybe there’s a conflict preventing Git from going any further until you fix the conflict.</p>
+
+<p>Generally, it’s a good idea to execute <code>git fetch</code> before pushing your changes to the remote, if you suspect that someone else may have been committing changes to that same particular branch on the remote, and you want to check out what they’ve done before you integrate it with your work.</p>
+
+<p>When Git fetches the remote commits and brings them down to your local system, it creates a temporary reference to the tip of the remote repository’s branch. Think back to when you explored a little of the Git internal file structure, and you found the file <strong>.git/refs/heads/master</strong> that simply contained a reference to the hash of the commit that was at the tip of the current branch (i.e., <code>HEAD</code>).</p>
+
+<p>You can see this reference in your own local hidden <strong>.git</strong> directory.</p>
+
+<p>Exeucte the following command:</p>
+<pre><code class="none">ls .git
+</code></pre>
+<p>In the results, you should see a file named <strong>FETCH_HEAD</strong>. That’s the temporary reference to the tip of your remote branches. Want to see what’s inside? Sure thing!</p>
+
+<p>Execute the following command to see the contents of <strong>FETCH_HEAD</strong>:</p>
+<pre><code class="none">cat .git/FETCH_HEAD
+</code></pre>
+<p>You’ll see a hash, along with a note of where this commit came from. In my case, I see the following at the top of that file:</p>
+<pre><code class="none">8909ec5feb674be351d99f19c51a6981930ba285        branch 'master' of https://github.com/belangerc/ideas
+</code></pre>
+<h3>Second step: Git merge</h3>
+
+<p>So once Git has fetched all of the commits to your local system, you’re essentially in a position in which you have a commit from one source — your local commit — that Git needs to combine with another commit: the remote commit. Sounds like merging a branch, doesn’t it?</p>
+
+<p>In fact, that’s pretty much how Git views the situation. Take a look back at the state of the repository graph before you merged, reproduced here:</p>
+<pre><code class="none">* c7f4e7f (HEAD -> master) Adding debugging book idea
+| * 8909ec5 (origin/master, origin/HEAD) Added killer blockchain idea
+|/
+*   1e04e39 Adding .gitignore files and HTML
+.
+.
+.
+</code></pre>
+<p>Merging two commits, regardless of where they came from, is essentially what you did when you merged your branches back to <code>master</code> in the previous chapter. The difference here is that Git creates a virtual “branch” that points to the commit from the remote repository, as you can see in the graphical representation of the repository tree above.</p>
+
+<p>There is a way around creating a messy merge commit, that involves the Git mechanism of <strong>rebasing</strong>. You’ll cover that method of merging in later sections of this book, but, for now, you’ll simply push your changes to the remote and live with the merge commit for now.</p>
+
+<p>Execute the following command to push your changes up to the remote:</p>
+<pre><code class="none">git push origin master
+</code></pre>
+<p>Head over to the main GitHub page for your repository, click on the <strong>22 commits</strong> link, and you’ll see your changes up there on the remote.</p>
+
+<h2>Dealing with multiple remotes</h2>
+
+<p>There’s another somewhat common synchronization scenario in which you have not one, but <em>two</em> remotes to deal with.</p>
+
+<p>You’ve been working on your own fork of the <strong>ideas</strong> repository for some time, but what if there were a few changes in someone else’s forked repository that you wanted to pull down to your own local system, and merge from whatever branch that user has them in, into your <code>master</code> branch?</p>
+
+<p>Head over to the original <strong>ideas</strong> repository at <a href="https://github.com/raywenderlich/ideas">https://github.com/raywenderlich/ideas</a>. Click on the number next to the <strong>Fork</strong> button, and you’ll see a list of all the forks that have been created from this repository:</p>
+
+<figure><img src="https://librarium.rwdev.io/git/master/19/syncing-with-a-remote/images/all-forks.png" style="width: 30%;"/></figure>
+
+<p>This mysterious <code>crispy8888</code> user has created an update on his copy of the repository that you’d like to pull down and incorporate into your local repository. Click on the <strong>ideas</strong> link next to the <code>crispy8888</code> username, and you’ll be taken to the <code>crispy8888</code> fork. Get the URL of this fork using the <strong>Clone or Download</strong> button.</p>
+
+<p>Back in your terminal program, execute the following to add a new remote to your repository:</p>
+<pre><code class="none">git remote add crispy8888 https://github.com/crispy8888/ideas.git
+</code></pre>
+<p>This creates a new remote reference in your repository, named <code>crispy8888</code>, that points to the <code>crispy8888</code>’s fork at the above URL.</p>
+
+<p>Execute the following command to see that your local repository now has another remote added to it:</p>
+<pre><code class="none">git remote -v
+</code></pre>
+<p>You’ll see something similar to the following:</p>
+<pre><code class="none">crispy8888  https://github.com/crispy8888/ideas.git (fetch)
+crispy8888  https://github.com/crispy8888/ideas.git (push)
+origin  https://www.github.com/belangerc/ideas (fetch)
+origin  https://www.github.com/belangerc/ideas (push)
+</code></pre>
+<p>There you are: another remote that points to someone else’s fork. Now you can work with that remote, just as you did with <code>origin</code>. Remember, the name of your first remote, <code>origin</code>, is nothing more than a convention. There’s nothing special about <code>origin</code>; it’s just another remote, no different than the <code>crispy8888</code> one you just created. And you don’t have to name your new remote the same as the account that created it; I could easily have named that remote <code>whatshisname</code> instead of <code>crispy8888</code> and things would have worked just as well.</p>
+
+<p>At this point, you only have a <em>reference</em> to the remote in your local repository; you don’t actually have any of the new remote’s content yet. To see this, execute the following command to see the graphical view of your repository:</p>
+<pre><code class="none">git log --graph --oneline --all
+</code></pre>
+<p>Even though you’ve instructed Git to look at all of the branches, you still can’t see the changes on the <code>crispy8888</code> remote. That’s because you haven’t fetched any of the content yet from that fork; it’s all still up on the server.</p>
+
+<p>Execute the following command to pull down the contents of the <code>crispy8888</code> remote:</p>
+<pre><code class="none">git fetch crispy8888
+</code></pre>
+<p>At the end of the output from that command, you’ll see the following two lines:</p>
+<pre><code class="none"> * [new branch]      clickbait  -> crispy8888/clickbait
+ * [new branch]      master     -> crispy8888/master
+</code></pre>
+<p>Now you can look at the graphical representation of this repository with the following command:</p>
+<pre><code class="none">git log --graph --oneline --all
+</code></pre>
+<p>At the top of the resulting graph, you’ll see where this remote has diverged from the original:</p>
+<pre><code class="none">* 9ff4582 (crispy8888/clickbait) Added another clickbait idea
+* e69a76a (HEAD -> clickbait, origin/clickbait) Adding suggestions from Mic
+* 5096c54 Adding first batch of clickbait ideas
+| *   a3ee3c2 (origin/master, origin/HEAD, master) Merge branch 'master' of https://github.com/belangerc/ideas
+| |\  
+| | * 8909ec5 Added killer blockchain idea
+| * | c7f4e7f Adding debugging book idea
+| |/  
+| * 1e04e39 Adding .gitignore files and HTML
+| * cf04646 Adds all the good ideas about management
+| * 58a2945 Removes terrible live streaming ideas
+| * 988820a Moves platform ideas to website directory
+| * b4d402f Updates book ideas for Symbian and MOS 6510
+| * 41c82df Added more tutorial ideas
+| * 761a50d Adding empty tutorials directory
+| * dbcfe56 Added new book entry and marked Git book complete
+| * c470849 (crispy8888/master) Going to try this livestreaming thing
+| * 629cc4d Some scratch ideas for the iOS team
+|/  
+* fbc46d3 Adding files for article ideas
+</code></pre>
+<p>ASCII graphing tools have their limitations, to be sure! But you get the point: there is a commit on <code>crispy8888/clickbait</code> that you’d like to pull into your own repository.</p>
+
+<p>To be diligent, you should probably follow a branching workflow here so your actions are easily traceable in the log. Move to your own <code>clickbait</code> branch:</p>
+<pre><code class="none">git checkout clickbait
+</code></pre>
+<p>Now you’d like to merge those two changes into your new branch. That’s done in just the same way that you merge any other branch. The only difference is that you have to explicitly specify the remote that you want to merge from:</p>
+<pre><code class="none">git merge crispy8888/clickbait
+</code></pre>
+<p>Git narrates every step of what it’s doing like any good, modern YouTube star:</p>
+<pre><code class="none">Updating e69a76a..9ff4582
+Fast-forward
+ articles/clickbait_ideas.md | 1 +
+ 1 file changed, 1 insertion(+)
+</code></pre>
+<p>Oh, that’s nice — Git performed a clean fast-forward merge for you, since there were no other changes on the forked <code>clickbait</code> branch since you created your own fork. That’s quite a change from your previous attempt, where you ended up with a merge commit for a simple change.</p>
+
+<p>To check that Git actually created a fast-forward merge, check the first few lines of <code>git log --graph --oneline</code>:</p>
+<pre><code class="none">* 9ff4582 (HEAD -> clickbait, crispy8888/clickbait) Added another clickbait idea
+* e69a76a (origin/clickbait) Adding suggestions from Mic
+* 5096c54 Adding first batch of clickbait ideas
+</code></pre>
+<p>Are you done, yet? No, you’ve only merged this into your local <code>clickbait</code> branch. You still need to merge this into <code>master</code>.</p>
+
+<p>First, switch to the branch you’d like to merge into:</p>
+<pre><code class="none">git checkout master
+</code></pre>
+<p>Now, merge in your local <code>clickbait</code> branch as follows:</p>
+<pre><code class="none">git merge clickbait
+</code></pre>
+<p>Vim opens up, so either accept the default merge message, or press <strong>I</strong> to enter Insert mode to improve it yourself. When done, <strong>Escape</strong> + <strong>Colon</strong> + <strong>w</strong> + <strong>q</strong> will get you out of there.</p>
+
+<p>Pull up the log again, with <code>git log --oneline --graph</code> to see the current state of affairs:</p>
+<pre><code class="none">*   58b5b43 (HEAD -> master) Merge branch 'clickbait'
+|\  
+| * 9ff4582 (crispy8888/clickbait, clickbait) Added another clickbait idea
+| * e69a76a (origin/clickbait) Adding suggestions from Mic
+| * 5096c54 Adding first batch of clickbait ideas
+* |   a3ee3c2 (origin/master, origin/HEAD) Merge branch 'master' of https://github.com/belangerc/ideas
+|\ \  
+| * | 8909ec5 Added killer blockchain idea
+* | | c7f4e7f Adding debugging book idea
+|/ /  
+
+.
+.
+.
+</code></pre>
+<p>At the top is your merge commit, and below that is your work done merging from the <code>crispy8888</code> remote. You can tell that Git is pushing its ASCII art graphing skills to the limit here with just three branches at play. Later in the book, you’ll see a few nicer alternatives to the Git command line graph analysis, but <code>git log</code> does nicely in a pinch when you don’t have access to your usual GUI tools.</p>
+
+<p>You’re done, here, so all that’s left is to push this merge to <code>origin</code>. Do that as you normally would with the following command:</p>
+<pre><code class="none">git push origin master
+</code></pre>
+<p>You’ve done a <em>tremendous</em> amount in this chapter, so there’s no challenge for you. You’ve covered more here than any average developer would likely see in the course of a few years’ worth of simple pushing, pulling, branching and merging.</p>
+
+<h2>Key points</h2>
+
+<ul>
+<li>Git has two mechanisms for synchronization: <strong>pushing</strong> and <strong>pulling</strong>.</li>
+<li><code>git push</code> takes your local commits and synchronizes the remote repository with those commits.</li>
+<li><code>git pull</code> brings the commits from the remote repository and merges them with your local commits.</li>
+<li><code>git pull</code> is actually two commands in disguise: <code>git fetch</code> and <code>git merge</code>.</li>
+<li><code>git fetch</code> pulls all of the commits down from the remote repository to your local one.</li>
+<li><code>git merge</code> merges the commits from the remote into your local repository.</li>
+<li>You can’t push to a remote that has any commits that you don’t have locally, and that Git can’t fast-forward merge.</li>
+<li>You can pull commits from multiple remotes into your local repository and merge them as you would commits from any other branch or remote.</li>
+</ul>
+
+<h2>Where to go from here?</h2>
+
+<p>You’ve accomplished quite a bit, here, so now that you know how to work in a powerful fashion with Git repositories, it’s time to loop back around and answer two questions:</p>
+
+<ul>
+<li>“How do I create a Git repository from scratch?”</li>
+<li>“How to I create a remote repository from a local one?”</li>
+</ul>
+
+<p>You’ll answer those two questions in the next two chapters that will close out this Beginning Git section of the book, and lead you nicely into the Intermediate Git chapters to come.</p>
+
+
+</main>
+
+<footer>
+  <nav>
+    <div class='left-align'><a href="chapter7.html">< Previous Page</a></div>
+    <div class='right-align'><a href="chapter9.html">Next Page ></a></div>
+</nav>
+</footer>
+
+</body>
+</html>
